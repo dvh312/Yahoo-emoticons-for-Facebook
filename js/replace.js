@@ -1,12 +1,3 @@
-//TODO: fix fb + yahoo emo same line
-//add more keyComb 
-//responsive image
-//
-//
-//changelog 1.5.3
-//change permission, remove tabs
-//change function name
-
 var running = 0; //check if the script is running
 
 //HTML changed eventListener
@@ -23,7 +14,6 @@ var observer = new MutationObserver(function(mutations, observer) {
 observer.observe(document, {
   subtree: true,
   childList: true,
-  //...
 });
 
 function replace(){
@@ -47,6 +37,11 @@ function replace(){
 	// var time = end - start;
 	// console.log("Run............ "+ time + "ms");
 }
+
+/**
+ * replace the HTML element with image code
+ * @param  {x} x array
+ */
 function replaceByTag(x){
 	for (i = 0; i < x.length; i++){
 		if (x[i].childElementCount > 0) continue;
@@ -67,6 +62,11 @@ function replaceByTag(x){
 		}	
 	}
 }
+/**
+ * get the image code based on the keyComb array index
+ * @param  {int} id the array index
+ * @return {string}    the code to inject into HTML
+ */
 function getCode(id){
 	var res = "<img src=\"http://l.yimg.com/us.yimg.com/i/mesg/emoticons7/" + (id + 1) + ".gif\">";
 	return res;
