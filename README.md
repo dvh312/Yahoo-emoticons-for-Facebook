@@ -9,10 +9,6 @@ Show Yahoo Emoticons for Facebook and Messenger.
 
 
 
-Known issues: 
-- Case sensitive problem
-- Image not responsive
-
 Version 1.5.6
 - Add 'case insensitive' feature
 
