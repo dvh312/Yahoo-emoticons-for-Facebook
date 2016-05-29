@@ -62,7 +62,7 @@ function replaceByTag(x){
 			//search textContent inside the element for emoticon key combination
 			for (var j = keyComb.length - 1; j >= 0; j--){
 				if (j + 1 < 80 || j + 1 > 99){
-					if (text.toUpperCase().includes(keyComb[j].toUpperCase())){
+					if (text.includes(keyComb[j])){
 						//replace special char
 						var temp = x[i].innerHTML;
 						while(temp.includes("&lt;")){
@@ -74,10 +74,11 @@ function replaceByTag(x){
 						while(temp.includes("&amp;")){
 							temp = temp.replace("&amp;", "&");
 						}
-
+						// console.log(text);
+						// console.log(x[i].outerHTML);
 						//change yh emo
-						while (temp.toUpperCase().includes(keyComb[j].toUpperCase())){
-							temp = temp.replace( caseInsensitive(keyComb[j]), getCode(j) );
+						while (temp.includes(keyComb[j])){
+							temp = temp.replace(keyComb[j], getCode(j));
 						}
 						x[i].innerHTML = temp;
 					}
@@ -116,24 +117,6 @@ function replaceFBEmo(x){
 function getCode(id){
 	var res = "<img src=\"http://l.yimg.com/us.yimg.com/i/mesg/emoticons7/" + (id + 1) + ".gif\">";
 	return res;
-}
-function preg_quote( str ) {
-    // http://kevin.vanzonneveld.net
-    // +   original by: booeyOH
-    // +   improved by: Ates Goral (http://magnetiq.com)
-    // +   improved by: Kevin van Zonneveld (http://kevin.vanzonneveld.net)
-    // +   bugfixed by: Onno Marsman
-    // *     example 1: preg_quote("$40");
-    // *     returns 1: '\$40'
-    // *     example 2: preg_quote("*RRRING* Hello?");
-    // *     returns 2: '\*RRRING\* Hello\?'
-    // *     example 3: preg_quote("\\.+*?[^]$(){}=!<>|:");
-    // *     returns 3: '\\\.\+\*\?\[\^\]\$\(\)\{\}\=\!\<\>\|\:'
-
-    return (str+'').replace(/([\\\.\+\*\?\[\^\]\$\(\)\{\}\=\!\<\>\|\:])/g, "\\$1");
-}
-function caseInsensitive(str){
-	return ( new RegExp( "(" + preg_quote( str ) + ")" , 'gi' ) );
 }
 var keyComb = [
 		":)",
