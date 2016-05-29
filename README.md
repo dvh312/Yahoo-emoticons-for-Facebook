@@ -10,9 +10,12 @@ Show Yahoo Emoticons for Facebook and Messenger.
 
 
 Known issues: 
-- Won't work with facebook emoticons in the same line.
 - Case sensitive problem
 - Image not responsive
+
+Version 1.5.4
+- Replace all possible Facebook emoticons with Yahoo emoticons
+- Fix facebook and yahoo emoticon in same line
 
 Version 1.5.3
 - Do not need 'tabs' permission
