@@ -101,6 +101,7 @@ function replaceFBEmo(x){
 					if (j + 1 < 80 || j + 1 > 99){
 						if (x[i].title == keyComb[j]){
 							x[i].outerHTML = getCode(j);
+							break;
 						}
 					}
 				}
