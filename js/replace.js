@@ -65,6 +65,17 @@ function replaceByTag(x){
 		}	
 
 		//replace facebook emo - leaf node with span tag
+		if (x[i].tagName == "SPAN"){
+			if (x[i].hasAttribute("title")){
+				for (j = keyComb.length - 1; j >= 0; j--){
+					if (j + 1 < 80 || j + 1 > 99){
+						if (x[i].title == keyComb[j]){
+							x[i].outerHTML = getCode(j);
+						}
+					}
+				}
+			}
+		}
 	}
 }
 /**
