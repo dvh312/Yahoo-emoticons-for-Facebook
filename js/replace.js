@@ -44,10 +44,13 @@ function replace(){
  */
 function replaceByTag(x){
 	for (i = 0; i < x.length; i++){
-		if (x[i].childElementCount > 0) continue;
-		if (x[i].attributes.length == 0 || !x[i].hasAttribute("data-text")){
+		if (x[i].childElementCount > 0) continue; //only process leaf node
+
+		if (!x[i].hasAttribute("data-text")){ //attribute data-text show when typing,
 			var temp = x[i].textContent;
 			var changed = 0;
+
+			//search textcontent inside the element for emoticon key combination
 			for (j = keyComb.length - 1; j >= 0; j--){
 				if (j + 1 < 80 || j + 1 > 99){
 					while (temp.includes(keyComb[j])){
@@ -60,6 +63,8 @@ function replaceByTag(x){
 				x[i].innerHTML = temp;
 			}
 		}	
+
+		//replace facebook emo - leaf node with span tag
 	}
 }
 /**
