@@ -24,9 +24,13 @@ function replace(){
 	//run script 250ms after the calling - prevent calling too many times
 	running = 1;
 	setTimeout(function rerunScript(){
-		var x = document.getElementsByTagName("SPAN"); //tag <span></span>
+		var x = document.getElementsByTagName("SPAN"); //all tag <span></span>
+		replaceFBEmo(x); //replace facebook emo first
+
+		//change key combination to emo
+		x = document.getElementsByTagName("SPAN"); //all tag <span></span>
 		replaceByTag(x);
-		x = document.getElementsByTagName("P"); //tag <p></p>
+		x = document.getElementsByTagName("P"); //all tag <p></p>
 		replaceByTag(x);
 		running = 0;
 	}, 250);
@@ -43,31 +47,57 @@ function replace(){
  * @param  {x} x array
  */
 function replaceByTag(x){
-	for (i = 0; i < x.length; i++){
-		if (x[i].childElementCount > 0) continue; //only process leaf node
+	for (var i = 0; i < x.length; i++){
+		// if (x[i].childElementCount > 0) continue; //only process leaf node
 
 		if (!x[i].hasAttribute("data-text")){ //attribute data-text show when typing,
-			var temp = x[i].textContent;
-			var changed = 0;
-
-			//search textcontent inside the element for emoticon key combination
-			for (j = keyComb.length - 1; j >= 0; j--){
-				if (j + 1 < 80 || j + 1 > 99){
-					while (temp.includes(keyComb[j])){
-						changed++;
-						temp = temp.replace(keyComb[j], getCode(j));
-					}
+			//just get text in this node, not in any child
+			var text = "";
+			for (var j = 0; j < x[i].childNodes.length; j++){
+				if (x[i].childNodes[j].nodeType == 3){
+					text += x[i].childNodes[j].textContent;
 				}
 			}
-			if (changed > 0) {
-				x[i].innerHTML = temp;
-			}
-		}	
 
-		//replace facebook emo - leaf node with span tag
+			//search textContent inside the element for emoticon key combination
+			for (var j = keyComb.length - 1; j >= 0; j--){
+				if (j + 1 < 80 || j + 1 > 99){
+					if (text.includes(keyComb[j])){
+						//replace special char
+						var temp = x[i].innerHTML;
+						while(temp.includes("&lt;")){
+							temp = temp.replace("&lt;", "<");
+						}
+						while(temp.includes("&gt;")){
+							temp = temp.replace("&gt;", ">");
+						}
+						while(temp.includes("&amp;")){
+							temp = temp.replace("&amp;", "&");
+						}
+						// console.log(text);
+						// console.log(x[i].outerHTML);
+						//change yh emo
+						while (temp.includes(keyComb[j])){
+							temp = temp.replace(keyComb[j], getCode(j));
+						}
+						x[i].innerHTML = temp;
+					}
+					
+				}
+			}
+		}
+	}
+}
+/**
+ * replace facebook emo - leaf node with span tag
+ * @param  {array} x elements
+ */
+function replaceFBEmo(x){
+	for (var i = 0; i < x.length; i++){
+		if (x[i].childElementCount > 0) continue;
 		if (x[i].tagName == "SPAN"){
 			if (x[i].hasAttribute("title")){
-				for (j = keyComb.length - 1; j >= 0; j--){
+				for (var j = keyComb.length - 1; j >= 0; j--){
 					if (j + 1 < 80 || j + 1 > 99){
 						if (x[i].title == keyComb[j]){
 							x[i].outerHTML = getCode(j);
