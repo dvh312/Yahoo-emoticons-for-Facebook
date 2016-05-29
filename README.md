@@ -13,6 +13,9 @@ Known issues:
 - Case sensitive problem
 - Image not responsive
 
+Version 1.5.6
+- Add 'case insensitive' feature
+
 Version 1.5.5
 - Fix bug when replace Facebook emoticons
 
