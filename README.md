@@ -13,6 +13,9 @@ Known issues:
 - Case sensitive problem
 - Image not responsive
 
+Version 1.5.5
+- Fix bug when replace Facebook emoticons
+
 Version 1.5.4
 - Replace all possible Facebook emoticons with Yahoo emoticons
 - Fix facebook and yahoo emoticon in same line
