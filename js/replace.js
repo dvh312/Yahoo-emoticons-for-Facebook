@@ -6,7 +6,7 @@ var observer = new MutationObserver(function(mutations, observer) {
 	// fired when a mutation occurs
 	
 	// console.log(mutations, observer);
-	replace();
+	if (running == 0) replace();
 });
 
 // define what element should be observed by the observer
@@ -17,8 +17,6 @@ observer.observe(document, {
 });
 
 function replace(){
-	
-	if (running == 1) return;
 	// var start = new Date().getTime();
 
 	//run script 250ms after the calling - prevent calling too many times
