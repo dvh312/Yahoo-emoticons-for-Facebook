@@ -118,7 +118,6 @@ function replaceFBEmo(x){
  */
 function getCode(id){
 	var s = "\"" + chrome.extension.getURL("images/YahooEmoticons/" + (id + 1) + ".gif") + "\"";
-	console.log(s);
 	var res = "<img src=" + s + ">";
 	return res;
 }
