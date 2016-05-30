@@ -30,7 +30,9 @@ chrome.browserAction.onClicked.addListener(function(tab) {
 		}
 	});	
 
-	alert("Please refresh your page.");
+	//auto reload all facebook and messenger page
+    reloadTabsURL("https://www.facebook.com/*");
+    reloadTabsURL("https://www.messenger.com/*");
 });
 
 chrome.runtime.onMessage.addListener( function(request, sender, sendResponse) {
@@ -47,3 +49,11 @@ chrome.runtime.onMessage.addListener( function(request, sender, sendResponse) {
         });
     }
 });
+
+function reloadTabsURL(queryUrl){
+	chrome.tabs.query({url: queryUrl}, function(tabs){
+		for (var i = 0; i < tabs.length; i++){
+			chrome.tabs.reload(tabs[i].id);
+		}
+	});
+}
