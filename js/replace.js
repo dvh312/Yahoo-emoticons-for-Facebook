@@ -48,8 +48,6 @@ function replace(){
  */
 function replaceByTag(x){
 	for (var i = 0; i < x.length; i++){
-		// if (x[i].childElementCount > 0) continue; //only process leaf node
-
 		if (!x[i].hasAttribute("data-text")){ //attribute data-text show when typing,
 			//just get text in this node, not in any child
 			var text = "";
@@ -140,7 +138,14 @@ function preg_quote( str ) {
     return (str+'').replace(/([\\\.\+\*\?\[\^\]\$\(\)\{\}\=\!\<\>\|\:])/g, "\\$1");
 }
 function toRegex(str){
-	//case insensitive, optional '-' character
+	//avoid some special case - do not apply MAIN to these keys
+	if (str == keyComb[6] || str == keyComb[64]){ 
+		//avoid http url :// -> (:-/)/       keyComb[6]
+		//avoid :"> change to (:-")>         keyComb[64]
+		return ( new RegExp( "(" + preg_quote(str) + ")" , 'gi' ) );
+	}
+
+	//MAIN: case insensitive, optional '-' or space character
 	var temp = preg_quote(str);
 	if (temp.includes("-")){
 		//can remove '-' in keycombine. Ex: can show :) if keycomb is :-)

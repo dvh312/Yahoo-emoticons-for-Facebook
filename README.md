@@ -7,6 +7,7 @@ Show Yahoo Emoticons for Facebook and Messenger.
 
 Version 1.5.8
 - Can work offline
+- Fix emoticon ( :"> )
 
 Version 1.5.7
 - Can now detect emoticons if user remove or add '-' or whitespace
