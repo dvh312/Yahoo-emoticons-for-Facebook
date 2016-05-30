@@ -47,6 +47,7 @@ function replace(){
 function replaceByTag(x){
 	for (var i = 0; i < x.length; i++){
 		if (!x[i].hasAttribute("data-text")){ //attribute data-text show when typing,
+			if (x[i].classList.contains("alternate_name")) continue;
 			//just get text in this node, not in any child
 			var text = "";
 			for (var j = 0; j < x[i].childNodes.length; j++){
