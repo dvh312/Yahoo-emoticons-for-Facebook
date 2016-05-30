@@ -2,11 +2,26 @@ var running = 0; //check if the script is running
 
 //HTML changed eventListener
 MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
+
 var observer = new MutationObserver(function(mutations, observer) {
 	// fired when a mutation occurs
 	
 	// console.log(mutations, observer);
-	replace();
+
+	//get isEnable value from storage
+	chrome.storage.sync.get("isEnable", function (obj) {
+		if (chrome.runtime.error) {
+			//console.log("Runtime error");	
+		} else {
+			if (obj.isEnable)
+				replace();
+
+			//change the icon
+			chrome.runtime.sendMessage({isEnable: obj.isEnable}, function(response) {
+				//console.log(response.message);
+			});
+		}
+	});
 });
 
 // define what element should be observed by the observer
