@@ -33,7 +33,7 @@ function replace(){
 		x = document.getElementsByTagName("P"); //all tag <p></p>
 		replaceByTag(x);
 		running = 0;
-	}, 1000);
+	}, 250);
 	
 	
 
