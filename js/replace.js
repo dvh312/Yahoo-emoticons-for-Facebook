@@ -23,8 +23,6 @@ observer.observe(document, {
 });
 
 function replace(){
-	
-	if (running == 1) return;
 	// var start = new Date().getTime();
 
 	//run script 250ms after the calling - prevent calling too many times
@@ -55,6 +53,7 @@ function replace(){
 function replaceByTag(x){
 	for (var i = 0; i < x.length; i++){
 		if (!x[i].hasAttribute("data-text")){ //attribute data-text show when typing,
+			if (x[i].classList.contains("alternate_name")) continue;
 			//just get text in this node, not in any child
 			var text = "";
 			for (var j = 0; j < x[i].childNodes.length; j++){
@@ -124,7 +123,6 @@ function replaceFBEmo(x){
  */
 function getCode(id){
 	var s = "\"" + chrome.extension.getURL("images/YahooEmoticons/" + (id + 1) + ".gif") + "\"";
-	console.log(s);
 	var res = "<img src=" + s + ">";
 	return res;
 }
@@ -283,4 +281,28 @@ var keyComb = [
 		":-bd",
 		"^#(^",
 		":bz",
+
+		//hidden emoticons from yahoo messenger 11
+		"~^o^~",
+		"'@^@|||",
+		"[]---",
+		"^o^||3",
+		":-(||>",
+		"'+_+",
+		":::^^:::",
+		"o|^_^|o",
+		":puke!",
+		"o|\\~",
+		"o|:-)",
+		":(fight)",
+		"%*-{",
+		"%||:-{",
+		"&[]",
+		":(tv)",
+		"?@_@?",
+		":->~~",
+		"'@-@",
+		":(game)",
+		":-)/\\:-)",
+		"[]==[]",
 ];
