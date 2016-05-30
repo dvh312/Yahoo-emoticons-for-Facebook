@@ -62,8 +62,9 @@ function replaceByTag(x){
 			//search textContent inside the element for emoticon key combination
 			for (var j = keyComb.length - 1; j >= 0; j--){
 				if (j + 1 < 80 || j + 1 > 99){
-					if (text.toUpperCase().includes(keyComb[j].toUpperCase())){
-						//replace special char
+					var key = toRegex(keyComb[j]);
+					if (text.match(key) != null){
+						//preprocess - replace special char in HTML
 						var temp = x[i].innerHTML;
 						while(temp.includes("&lt;")){
 							temp = temp.replace("&lt;", "<");
@@ -76,10 +77,13 @@ function replaceByTag(x){
 						}
 
 						//change yh emo
-						while (temp.toUpperCase().includes(keyComb[j].toUpperCase())){
-							temp = temp.replace( caseInsensitive(keyComb[j]), getCode(j) );
+						var s = temp.match(key);
+						if (s != null){
+							for (var k = 0; k < s.length; k++){
+								temp = temp.replace(key, getCode(j) );
+							}
+							x[i].innerHTML = temp;
 						}
-						x[i].innerHTML = temp;
 					}
 					
 				}
@@ -98,7 +102,8 @@ function replaceFBEmo(x){
 			if (x[i].hasAttribute("title")){
 				for (var j = keyComb.length - 1; j >= 0; j--){
 					if (j + 1 < 80 || j + 1 > 99){
-						if (x[i].title == keyComb[j]){
+						var key = toRegex(keyComb[j]);
+						if (x[i].title.match(key) != null){
 							x[i].outerHTML = getCode(j);
 							break;
 						}
@@ -132,8 +137,21 @@ function preg_quote( str ) {
 
     return (str+'').replace(/([\\\.\+\*\?\[\^\]\$\(\)\{\}\=\!\<\>\|\:])/g, "\\$1");
 }
-function caseInsensitive(str){
-	return ( new RegExp( "(" + preg_quote( str ) + ")" , 'gi' ) );
+function toRegex(str){
+	//case insensitive, optional '-' character
+	var temp = preg_quote(str);
+	if (temp.includes("-")){
+		//can remove '-' in keycombine. Ex: can show :) if keycomb is :-)
+		temp = temp.replace("-", "-?");
+	} else if (temp.includes("\:")){
+		//can add '-' after ':' in keycombine. 
+		//Ex: can show :-) if keycomb is :)
+		//
+		//can add ONE whitespace after before or after OPTIONAL '-'. 
+		//Ex: can show : ) or : -) or :- ) or : - ) if keycomb is :)
+		temp = temp.replace("\:", "\:\\s?-?\\s?");
+	}
+	return ( new RegExp( "(" + temp + ")" , 'gi' ) );
 }
 var keyComb = [
 		":)",

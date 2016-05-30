@@ -7,7 +7,8 @@ Show Yahoo Emoticons for Facebook and Messenger.
 
 
 
-
+Version 1.5.7
+- Can now detect emoticons if user remove or add '-' or whitespace
 
 Version 1.5.6
 - Add 'case insensitive' feature
