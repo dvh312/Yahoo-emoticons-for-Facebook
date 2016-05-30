@@ -30,7 +30,6 @@
 
   "permissions": [
     "https://www.facebook.com/*",
-    "https://www.messenger.com/*",
-    "storage"
+    "https://www.messenger.com/*"
   ]
 }

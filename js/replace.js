@@ -8,19 +8,10 @@ var observer = new MutationObserver(function(mutations, observer) {
 	
 	// console.log(mutations, observer);
 
-	//get isEnable value from storage
-	chrome.storage.sync.get("isEnable", function (obj) {
-		if (chrome.runtime.error) {
-			//console.log("Runtime error");	
-		} else {
-			if (obj.isEnable)
-				replace();
-
-			//change the icon
-			chrome.runtime.sendMessage({isEnable: obj.isEnable}, function(response) {
-				//console.log(response.message);
-			});
-		}
+	chrome.runtime.sendMessage({}, function(response) {
+		//console.log(response.message);
+		if (response.isEnable) 
+			replace()
 	});
 });
 
