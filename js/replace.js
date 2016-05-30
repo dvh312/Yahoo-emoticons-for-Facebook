@@ -21,7 +21,7 @@ function replace(){
 	if (running == 1) return;
 	// var start = new Date().getTime();
 
-	//run script 1000ms after the calling - prevent calling too many times
+	//run script 250ms after the calling - prevent calling too many times
 	running = 1;
 	setTimeout(function rerunScript(){
 		var x = document.getElementsByTagName("SPAN"); //all tag <span></span>
