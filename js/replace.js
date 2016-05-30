@@ -139,9 +139,10 @@ function preg_quote( str ) {
 }
 function toRegex(str){
 	//avoid some special case - do not apply MAIN to these keys
-	if (str == keyComb[6] || str == keyComb[64]){ 
-		//avoid http url :// -> (:-/)/       keyComb[6]
-		//avoid :"> change to (:-")>         keyComb[64]
+	if (str == keyComb[6] || str == keyComb[64] || str == keyComb[75]){ 
+		//avoid http url :// change to :-//			keyComb[6]
+		//avoid :"> change to :-">					keyComb[64]
+		//avoid :@) change to :-@)					keyComb[75]
 		return ( new RegExp( "(" + preg_quote(str) + ")" , 'gi' ) );
 	}
 
