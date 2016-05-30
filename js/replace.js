@@ -8,13 +8,15 @@ var observer = new MutationObserver(function(mutations, observer) {
 	
 	// console.log(mutations, observer);
 
+
 	//get isEnable value from storage
 	chrome.storage.sync.get("isEnable", function (obj) {
 		if (chrome.runtime.error) {
 			//console.log("Runtime error");	
 		} else {
-			if (obj.isEnable)
-				replace();
+			if (obj.isEnable){
+				if (running == 0) replace();
+			}
 
 			//change the icon
 			chrome.runtime.sendMessage({isEnable: obj.isEnable}, function(response) {
@@ -32,8 +34,6 @@ observer.observe(document, {
 });
 
 function replace(){
-	
-	if (running == 1) return;
 	// var start = new Date().getTime();
 
 	//run script 250ms after the calling - prevent calling too many times
@@ -133,7 +133,6 @@ function replaceFBEmo(x){
  */
 function getCode(id){
 	var s = "\"" + chrome.extension.getURL("images/YahooEmoticons/" + (id + 1) + ".gif") + "\"";
-	console.log(s);
 	var res = "<img src=" + s + ">";
 	return res;
 }
@@ -292,4 +291,28 @@ var keyComb = [
 		":-bd",
 		"^#(^",
 		":bz",
+
+		//hidden emoticons from yahoo messenger 11
+		"~^o^~",
+		"'@^@|||",
+		"[]---",
+		"^o^||3",
+		":-(||>",
+		"'+_+",
+		":::^^:::",
+		"o|^_^|o",
+		":puke!",
+		"o|\\~",
+		"o|:-)",
+		":(fight)",
+		"%*-{",
+		"%||:-{",
+		"&[]",
+		":(tv)",
+		"?@_@?",
+		":->~~",
+		"'@-@",
+		":(game)",
+		":-)/\\:-)",
+		"[]==[]",
 ];
