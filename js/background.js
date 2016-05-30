@@ -6,20 +6,8 @@ chrome.browserAction.onClicked.addListener(function(tab) {
 
 	isEnable = !isEnable;
 	//set new icon
-	if (!isEnable){
-		chrome.browserAction.setIcon({
-            path: "./images/iconblack.png",
-            tabId: tab.id
-        });
-
+	if (!isEnable)
         alert("Please refresh your page.");
-	}
-	else {
-		chrome.browserAction.setIcon({
-            path: "./images/icon.png",
-            tabId: tab.id
-        });
-	}
 });
 
 chrome.runtime.onMessage.addListener( function(request, sender, sendResponse) {
