@@ -119,7 +119,9 @@ function replaceFBEmo(x){
  * @return {string}    the code to inject into HTML
  */
 function getCode(id){
-	var res = "<img src=\"http://l.yimg.com/us.yimg.com/i/mesg/emoticons7/" + (id + 1) + ".gif\">";
+	var s = "\"" + chrome.extension.getURL("images/YahooEmoticons/" + (id + 1) + ".gif") + "\"";
+	console.log(s);
+	var res = "<img src=" + s + ">";
 	return res;
 }
 function preg_quote( str ) {
