@@ -5,6 +5,7 @@ Show Yahoo Emoticons for Facebook and Messenger.
 
 Version 1.7.3
 - Decrease loading speed
+- Fix :poop: emoticon
 
 Version 1.7.2
 - Increase performance
