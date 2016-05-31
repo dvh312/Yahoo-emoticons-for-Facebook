@@ -82,7 +82,8 @@ function replaceByTag(x){
 
 				if (text.match(key) != null){
 					processed = preprocessHTML(x[i].innerHTML);
-					x[i].innerHTML = changeYHEmo(processed, key, j);
+					if (x[i].tagName == "U") x[i].outerHTML = changeYHEmo(processed, key, j);
+					else x[i].innerHTML = changeYHEmo(processed, key, j);
 				}
 			}
 		}
