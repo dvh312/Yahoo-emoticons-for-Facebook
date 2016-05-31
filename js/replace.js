@@ -57,7 +57,7 @@ chrome.runtime.sendMessage({}, function(response) {
 		}
 
 		function replace(){
-			var start = new Date().getTime();
+			// var start = new Date().getTime();
 
 			var x = document.getElementsByTagName("SPAN"); //all tag <span></span>
 			replaceFBEmo(x); //replace facebook emo first
@@ -70,9 +70,9 @@ chrome.runtime.sendMessage({}, function(response) {
 			x = document.getElementsByTagName("DIV"); //all tag <div></div>
 			replaceByTag(x);
 
-			var end = new Date().getTime();
-			var time = end - start;
-			console.log("Run............ "+ time + "ms");	
+			// var end = new Date().getTime();
+			// var time = end - start;
+			// console.log("Run............ "+ time + "ms");	
 		}
 
 		/**
