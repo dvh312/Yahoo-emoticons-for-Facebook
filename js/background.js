@@ -1,3 +1,7 @@
+//auto reload all facebook and messenger after installing
+reloadTabsURL("https://www.facebook.com/*");
+reloadTabsURL("https://www.messenger.com/*");
+
 //initial the isEnable value
 var isEnable = true;
 
