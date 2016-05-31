@@ -5,7 +5,7 @@ Show Yahoo Emoticons for Facebook and Messenger.
 
 Version 1.7.0
 - Add disable/enable feature
-- Rollback optional space and '-' for faster speed
+- Rollback optional space and '-' for better performance
 
 Version 1.6.2
 - Fix a small bug which can cause the script runs slower
