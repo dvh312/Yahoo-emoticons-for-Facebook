@@ -5,11 +5,7 @@ var isEnable = true;
 chrome.browserAction.onClicked.addListener(function(tab) {
 
 	isEnable = !isEnable;
-	//set new icon
-
-	if (!isEnable)
-        alert("Please refresh your page.");
-
+    
 	//auto reload all facebook and messenger page
     reloadTabsURL("https://www.facebook.com/*");
     reloadTabsURL("https://www.messenger.com/*");
