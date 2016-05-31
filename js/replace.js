@@ -17,8 +17,8 @@ chrome.runtime.sendMessage({}, function(response) {
 			    	setTimeout(function afterMs(){ 
 			    		//consider as HTML continuously change if canRun is set back to false
 			    		if (canRun) replace();
-			    	}, 100);    	
-				}, 1000);
+			    	}, 25);    	
+				}, 250);
 			}
 		});
 
