@@ -57,7 +57,7 @@ chrome.runtime.sendMessage({}, function(response) {
 		}
 
 		function replace(){
-			// var start = new Date().getTime();
+			var start = new Date().getTime();
 
 			var x = document.getElementsByTagName("SPAN"); //all tag <span></span>
 			replaceFBEmo(x); //replace facebook emo first
@@ -70,9 +70,9 @@ chrome.runtime.sendMessage({}, function(response) {
 			x = document.getElementsByTagName("DIV"); //all tag <div></div>
 			replaceByTag(x);
 
-			// var end = new Date().getTime();
-			// var time = end - start;
-			// console.log("Run............ "+ time + "ms");	
+			var end = new Date().getTime();
+			var time = end - start;
+			console.log("Run............ "+ time + "ms");	
 		}
 
 		/**
@@ -81,41 +81,42 @@ chrome.runtime.sendMessage({}, function(response) {
 		 */
 		function replaceByTag(x){
 			for (var i = 0; i < x.length; i++){
-				if (!x[i].hasAttribute("data-text")){ //attribute data-text show when typing,
-					if (x[i].classList.contains("alternate_name")) continue;
-					// if (x[i].childElementCount > 0) continue;
-					//just get text in this node, not in any child
-					var text = "";
-					for (var j = 0; j < x[i].childNodes.length; j++){
-						if (x[i].childNodes[j].nodeType == 3){
-							text += x[i].childNodes[j].textContent;
-						}
+				if (x[i].hasAttribute("done")) continue;
+				if (x[i].hasAttribute("data-text")) continue; //attribute data-text show when typing,
+				if (x[i].classList.contains("alternate_name")) continue; //prevent change the alt name
+				
+				x[i].setAttribute("done", "1");
+				//just get text in this node, not in any child
+				var text = "";
+				for (var j = 0; j < x[i].childNodes.length; j++){
+					if (x[i].childNodes[j].nodeType == 3){
+						text += x[i].childNodes[j].textContent;
 					}
+				}
 
-					//search textContent inside the element for emoticon key combination
-					for (var j = keyComb.length - 1; j >= 0; j--){
-						if (j + 1 < 80 || j + 1 > 99){
-							if (text.toUpperCase().includes(keyComb[j].toUpperCase())){
-								//preprocess - replace special char in HTML
-								var temp = x[i].innerHTML;
-								while(temp.includes("&lt;")){
-									temp = temp.replace("&lt;", "<");
-								}
-								while(temp.includes("&gt;")){
-									temp = temp.replace("&gt;", ">");
-								}
-								while(temp.includes("&amp;")){
-									temp = temp.replace("&amp;", "&");
-								}
+				//search textContent inside the element for emoticon key combination
+				for (var j = keyComb.length - 1; j >= 0; j--){
+					if (j + 1 < 80 || j + 1 > 99){
+						var key = toRegex(keyComb[j], j);
 
-								//change yh emo
-								var key = toRegex(keyComb[j]);
-								while (temp.toUpperCase().includes(keyComb[j].toUpperCase())){
-									temp = temp.replace(key, getCode(j));
-								}
-								x[i].innerHTML = temp;
+						if (text.match(key) != null){
+							//preprocess - replace special char in HTML
+							var temp = x[i].innerHTML;
+							while(temp.includes("&lt;")){
+								temp = temp.replace("&lt;", "<");
 							}
-							
+							while(temp.includes("&gt;")){
+								temp = temp.replace("&gt;", ">");
+							}
+							while(temp.includes("&amp;")){
+								temp = temp.replace("&amp;", "&");
+							}
+
+							//change yh emo
+							while (temp.match(key) != null){
+								temp = temp.replace(key, getCode(j));
+							}
+							x[i].innerHTML = temp;
 						}
 					}
 				}
@@ -127,20 +128,26 @@ chrome.runtime.sendMessage({}, function(response) {
 		 */
 		function replaceFBEmo(x){
 			for (var i = 0; i < x.length; i++){
+				if (x[i].hasAttribute("done")) continue;
 				if (x[i].childElementCount > 0) continue;
+				
+
+				var changed = false;
 				if (x[i].tagName == "SPAN"){
 					if (x[i].hasAttribute("title")){
 						for (var j = keyComb.length - 1; j >= 0; j--){
 							if (j + 1 < 80 || j + 1 > 99){
-								// var key = toRegex(keyComb[j]);
-								if (x[i].title.toUpperCase().includes(keyComb[j].toUpperCase())){
+								var key = toRegex(keyComb[j], j);
+								if (x[i].title.match(key) != null){
 									x[i].outerHTML = getCode(j);
+									changed = true;
 									break;
 								}
 							}
 						}
 					}
 				}
+				if (changed) x[i].setAttribute("done", "1");
 			}
 		}
 		/**
@@ -168,170 +175,172 @@ chrome.runtime.sendMessage({}, function(response) {
 
 		    return (str+'').replace(/([\\\.\+\*\?\[\^\]\$\(\)\{\}\=\!\<\>\|\:])/g, "\\$1");
 		}
-		function toRegex(str){
-			// //avoid some special case - do not apply MAIN to these keys
-			// if (str == keyComb[6] || str == keyComb[64] || str == keyComb[75]){ 
-			// 	//avoid http url :// change to :-//			keyComb[6]
-			// 	//avoid :"> change to :-">					keyComb[64]
-			// 	//avoid :@) change to :-@)					keyComb[75]
-			// 	return ( new RegExp( "(" + preg_quote(str) + ")" , 'gi' ) );
-			// }
+		function toRegex(str, idx){
+			//only run MAIN for basic emoticons
+			var basic = false;
+			for (var i = 0; i < basicEmo.length; i++){
+				if (idx == basicEmo[i] - 1) {
+					basic = true;
+					break;
+				}
+			}
 
-			// //MAIN: case insensitive, optional '-' or space character
 			var temp = preg_quote(str);
-			// if (temp.includes("-")){
-			// 	//can remove '-' in keycombine. Ex: can show :) if keycomb is :-)
-			// 	temp = temp.replace("-", "-?");
-			// } else if (temp.includes("\:")){
-			// 	//can add '-' after ':' in keycombine. 
-			// 	//Ex: can show :-) if keycomb is :)
-			// 	//
-			// 	//can add ONE whitespace after before or after OPTIONAL '-'. 
-			// 	//Ex: can show : ) or : -) or :- ) or : - ) if keycomb is :)
-			// 	temp = temp.replace("\:", "\:\\s?-?\\s?");
-			// }
+			// //MAIN: case insensitive, optional '-' character
+			if (basic){
+				if (temp.includes("-")){
+					//can remove '-' in keycombine. Ex: can show :) if keycomb is :-)
+					temp = temp.replace("-", "-?");
+				} else if (temp.includes("\:")){
+					//can add '-' after ':' in keycombine. 
+					//Ex: can show :-) if keycomb is :)
+					//
+					temp = temp.replace("\:", "\:-?");
+				}
+			}
 			return ( new RegExp( "(" + temp + ")" , 'gi' ) );
 		}
-		var keyComb = [
-				":)",
-				":(",
-				";)",
-				":D",
-				";;)",
-				">:D<",
-				":-/",
-				":x",
-				":\">",
-				":P",
-				":-*",
-				"=((",
-				":-O",
-				"X(",
-				":>",
-				"B-)",
-				":-S",
-				"#:-S",
-				">:)",
-				":((",
-				":))",
-				":|",
-				"/:)",
-				"=))",
-				"O:-)",
-				":-B",
-				"=;",
-				"I-)",
-				"8-|",
-				"L-)",
-				":-&",
-				":-$",
-				"[-(",
-				":O)",
-				"8-}",
-				"<:-P",
-				"(:|",
-				"=P~",
-				":-?",
-				"#-o",
-				"=D>",
-				":-SS",
-				"@-)",
-				":^o",
-				":-w",
-				":-<",
-				">:P",
-				"<):)",
-				":@)",
-				"3:-O",
-				":(|)",
-				"~:>",
-				"@};-",
-				"%%-",
-				"**==",
-				"(~~)",
-				"~O)",
-				"*-:)",
-				"8-X",
-				"=:)",
-				">-)",
-				":-L",
-				"[-O<",
-				"$-)",
-				":-\"",
-				"b-(",
-				":)>-",
-				"[-X",
-				"\\:D/",
-				">:/",
-				";))",
-				"o->",
-				"o=>",
-				"o-+",
-				"(%)",
-				":-@",
-				"^:)^",
-				":-j",
-				"(*)",
-				"",
-				"",
-				"",
-				"",
-				"",
-				"",
-				"",
-				"",
-				"",
-				"",
-				"",
-				"",
-				"",
-				"",
-				"",
-				"",
-				"",
-				"",
-				"",
-				"",
-				":)]",
-				":-c",
-				"~X(",
-				":-h",
-				":-t",
-				"8->",
-				":-??",
-				"%-(",
-				":o3",
-				"X_X",
-				":!!",
-				"\\m/",
-				":-q",
-				":-bd",
-				"^#(^",
-				":bz",
-
-				//hidden emoticons from yahoo messenger 11
-				"~^o^~",
-				"'@^@|||",
-				"[]---",
-				"^o^||3",
-				":-(||>",
-				"'+_+",
-				":::^^:::",
-				"o|^_^|o",
-				":puke!",
-				"o|\\~",
-				"o|:-)",
-				":(fight)",
-				"%*-{",
-				"%||:-{",
-				"&[]",
-				":(tv)",
-				"?@_@?",
-				":->~~",
-				"'@-@",
-				":(game)",
-				":-)/\\:-)",
-				"[]==[]",
-		];
 	}
 });
+var basicEmo = [1,2,3,4,8,10,11,13,15,16,17,22,46];
+var keyComb = [
+	":)",
+	":(",
+	";)",
+	":D",
+	";;)",
+	">:D<",
+	":-/",
+	":x",
+	":\">",
+	":P",
+	":-*",
+	"=((",
+	":-O",
+	"X(",
+	":>",
+	"B-)",
+	":-S",
+	"#:-S",
+	">:)",
+	":((",
+	":))",
+	":|",
+	"/:)",
+	"=))",
+	"O:-)",
+	":-B",
+	"=;",
+	"I-)",
+	"8-|",
+	"L-)",
+	":-&",
+	":-$",
+	"[-(",
+	":O)",
+	"8-}",
+	"<:-P",
+	"(:|",
+	"=P~",
+	":-?",
+	"#-o",
+	"=D>",
+	":-SS",
+	"@-)",
+	":^o",
+	":-w",
+	":-<",
+	">:P",
+	"<):)",
+	":@)",
+	"3:-O",
+	":(|)",
+	"~:>",
+	"@};-",
+	"%%-",
+	"**==",
+	"(~~)",
+	"~O)",
+	"*-:)",
+	"8-X",
+	"=:)",
+	">-)",
+	":-L",
+	"[-O<",
+	"$-)",
+	":-\"",
+	"b-(",
+	":)>-",
+	"[-X",
+	"\\:D/",
+	">:/",
+	";))",
+	"o->",
+	"o=>",
+	"o-+",
+	"(%)",
+	":-@",
+	"^:)^",
+	":-j",
+	"(*)",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	":)]",
+	":-c",
+	"~X(",
+	":-h",
+	":-t",
+	"8->",
+	":-??",
+	"%-(",
+	":o3",
+	"X_X",
+	":!!",
+	"\\m/",
+	":-q",
+	":-bd",
+	"^#(^",
+	":bz",
+
+	//hidden emoticons from yahoo messenger 11
+	"~^o^~",
+	"'@^@|||",
+	"[]---",
+	"^o^||3",
+	":-(||>",
+	"'+_+",
+	":::^^:::",
+	"o|^_^|o",
+	":puke!",
+	"o|\\~",
+	"o|:-)",
+	":(fight)",
+	"%*-{",
+	"%||:-{",
+	"&[]",
+	":(tv)",
+	"?@_@?",
+	":->~~",
+	"'@-@",
+	":(game)",
+	":-)/\\:-)",
+	"[]==[]",
+];
