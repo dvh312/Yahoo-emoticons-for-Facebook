@@ -6,6 +6,16 @@ chrome.browserAction.onClicked.addListener(function(tab) {
 
 	isEnable = !isEnable;
 
+    if (isEnable)
+        chrome.browserAction.setIcon({
+            path: "./images/icon.png"
+        });
+    else {
+        chrome.browserAction.setIcon({
+            path: "./images/iconblack.png"
+        });
+    }
+    
 	//auto reload all facebook and messenger page
     reloadTabsURL("https://www.facebook.com/*");
     reloadTabsURL("https://www.messenger.com/*");
