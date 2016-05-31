@@ -1,4 +1,4 @@
-var running = 0; //check if the script is running
+var canRun = true; //check if the script is running
 
 //HTML changed eventListener
 MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
@@ -6,13 +6,17 @@ MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 var observer = new MutationObserver(function(mutations, observer) {
 	// fired when a mutation occurs
 	
-	// console.log(mutations, observer);
-
-	chrome.runtime.sendMessage({}, function(response) {
-		//console.log(response.message);
-		if (response.isEnable) 
-			replace()
-	});
+	console.log("HTMLchanged");
+	if (canRun){
+		canRun = false;
+	    setTimeout(function afterMs(){ //triger Xms after event
+	    	canRun = true;
+	    	setTimeout(function afterMs(){ 
+	    		//consider as HTML continuously change if canRun is set back to false
+	    		if (canRun) replace();
+	    	}, 100);    	
+		}, 1000);
+	}
 });
 
 // define what element should be observed by the observer
@@ -22,28 +26,62 @@ observer.observe(document, {
   childList: true,
 });
 
+
+
+// document.onscroll = function(e){
+// 	console.log("scroll");
+// 	if (canRun){
+// 		canRun = false;
+// 	    setTimeout(function after1000ms(){
+// 	    	canRun = true;
+// 	    	setTimeout(function after100ms(){ 
+// 	    		//consider as scrolling if canRun is set back to false
+// 	    		if (canRun) replace();
+// 	    	}, 100);
+	    	
+// 	    }, 1000);
+// 	}
+// }
+// document.onkeypress = function(e) {
+// 	console.log("keyPressed");
+//     if (canRun){
+// 		canRun = false;
+// 	    setTimeout(function after1000ms(){
+// 	    	canRun = true;
+// 	    	setTimeout(function after100ms(){ 
+// 	    		//consider as scrolling if canRun is set back to false
+// 	    		if (canRun) replace();
+// 	    	}, 100);
+	    	
+// 	    }, 1000);
+// 	}
+// };
+
+function isEnabled(){
+	chrome.runtime.sendMessage({}, function(response) {
+		return response.isEnable;
+	});
+}
+
 function replace(){
-	// var start = new Date().getTime();
+	// if (!isEnabled()) return;
 
-	//run script 250ms after the calling - prevent calling too many times
-	running = 1;
-	setTimeout(function rerunScript(){
-		var x = document.getElementsByTagName("SPAN"); //all tag <span></span>
-		replaceFBEmo(x); //replace facebook emo first
+	var start = new Date().getTime();
 
-		//change key combination to emo
-		x = document.getElementsByTagName("SPAN"); //all tag <span></span>
-		replaceByTag(x);
-		x = document.getElementsByTagName("P"); //all tag <p></p>
-		replaceByTag(x);
-		running = 0;
-	}, 250);
-	
-	
+	var x = document.getElementsByTagName("SPAN"); //all tag <span></span>
+	replaceFBEmo(x); //replace facebook emo first
 
-	// var end = new Date().getTime();
-	// var time = end - start;
-	// console.log("Run............ "+ time + "ms");
+	//change key combination to emo
+	x = document.getElementsByTagName("SPAN"); //all tag <span></span>
+	replaceByTag(x);
+	x = document.getElementsByTagName("P"); //all tag <p></p>
+	replaceByTag(x);
+	x = document.getElementsByTagName("DIV"); //all tag <div></div>
+	replaceByTag(x);
+
+	var end = new Date().getTime();
+	var time = end - start;
+	console.log("Run............ "+ time + "ms");	
 }
 
 /**
@@ -54,6 +92,7 @@ function replaceByTag(x){
 	for (var i = 0; i < x.length; i++){
 		if (!x[i].hasAttribute("data-text")){ //attribute data-text show when typing,
 			if (x[i].classList.contains("alternate_name")) continue;
+			// if (x[i].childElementCount > 0) continue;
 			//just get text in this node, not in any child
 			var text = "";
 			for (var j = 0; j < x[i].childNodes.length; j++){
@@ -65,8 +104,7 @@ function replaceByTag(x){
 			//search textContent inside the element for emoticon key combination
 			for (var j = keyComb.length - 1; j >= 0; j--){
 				if (j + 1 < 80 || j + 1 > 99){
-					var key = toRegex(keyComb[j]);
-					if (text.match(key) != null){
+					if (text.toUpperCase().includes(keyComb[j].toUpperCase())){
 						//preprocess - replace special char in HTML
 						var temp = x[i].innerHTML;
 						while(temp.includes("&lt;")){
@@ -80,13 +118,11 @@ function replaceByTag(x){
 						}
 
 						//change yh emo
-						var s = temp.match(key);
-						if (s != null){
-							for (var k = 0; k < s.length; k++){
-								temp = temp.replace(key, getCode(j) );
-							}
-							x[i].innerHTML = temp;
+						var key = toRegex(keyComb[j]);
+						while (temp.toUpperCase().includes(keyComb[j].toUpperCase())){
+							temp = temp.replace(key, getCode(j));
 						}
+						x[i].innerHTML = temp;
 					}
 					
 				}
@@ -105,8 +141,8 @@ function replaceFBEmo(x){
 			if (x[i].hasAttribute("title")){
 				for (var j = keyComb.length - 1; j >= 0; j--){
 					if (j + 1 < 80 || j + 1 > 99){
-						var key = toRegex(keyComb[j]);
-						if (x[i].title.match(key) != null){
+						// var key = toRegex(keyComb[j]);
+						if (x[i].title.toUpperCase().includes(keyComb[j].toUpperCase())){
 							x[i].outerHTML = getCode(j);
 							break;
 						}
@@ -142,27 +178,27 @@ function preg_quote( str ) {
     return (str+'').replace(/([\\\.\+\*\?\[\^\]\$\(\)\{\}\=\!\<\>\|\:])/g, "\\$1");
 }
 function toRegex(str){
-	//avoid some special case - do not apply MAIN to these keys
-	if (str == keyComb[6] || str == keyComb[64] || str == keyComb[75]){ 
-		//avoid http url :// change to :-//			keyComb[6]
-		//avoid :"> change to :-">					keyComb[64]
-		//avoid :@) change to :-@)					keyComb[75]
-		return ( new RegExp( "(" + preg_quote(str) + ")" , 'gi' ) );
-	}
+	// //avoid some special case - do not apply MAIN to these keys
+	// if (str == keyComb[6] || str == keyComb[64] || str == keyComb[75]){ 
+	// 	//avoid http url :// change to :-//			keyComb[6]
+	// 	//avoid :"> change to :-">					keyComb[64]
+	// 	//avoid :@) change to :-@)					keyComb[75]
+	// 	return ( new RegExp( "(" + preg_quote(str) + ")" , 'gi' ) );
+	// }
 
-	//MAIN: case insensitive, optional '-' or space character
+	// //MAIN: case insensitive, optional '-' or space character
 	var temp = preg_quote(str);
-	if (temp.includes("-")){
-		//can remove '-' in keycombine. Ex: can show :) if keycomb is :-)
-		temp = temp.replace("-", "-?");
-	} else if (temp.includes("\:")){
-		//can add '-' after ':' in keycombine. 
-		//Ex: can show :-) if keycomb is :)
-		//
-		//can add ONE whitespace after before or after OPTIONAL '-'. 
-		//Ex: can show : ) or : -) or :- ) or : - ) if keycomb is :)
-		temp = temp.replace("\:", "\:\\s?-?\\s?");
-	}
+	// if (temp.includes("-")){
+	// 	//can remove '-' in keycombine. Ex: can show :) if keycomb is :-)
+	// 	temp = temp.replace("-", "-?");
+	// } else if (temp.includes("\:")){
+	// 	//can add '-' after ':' in keycombine. 
+	// 	//Ex: can show :-) if keycomb is :)
+	// 	//
+	// 	//can add ONE whitespace after before or after OPTIONAL '-'. 
+	// 	//Ex: can show : ) or : -) or :- ) or : - ) if keycomb is :)
+	// 	temp = temp.replace("\:", "\:\\s?-?\\s?");
+	// }
 	return ( new RegExp( "(" + temp + ")" , 'gi' ) );
 }
 var keyComb = [
