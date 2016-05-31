@@ -102,10 +102,13 @@ function replaceFBEmo(x){
 				for (var j = keyComb.length - 1; j >= 0; j--){
 					if (j + 1 < 80 || j + 1 > 99){
 						var key = toRegex(keyComb[j], j);
-						if (x[i].title.match(key) != null){
-							x[i].outerHTML = getCode(j);
-							changed = true;
-							break;
+						var match = x[i].title.match(key);
+						if (match != null){
+							if (match[0] == x[i].title){
+								x[i].outerHTML = getCode(j);
+								changed = true;
+								break;
+							}
 						}
 					}
 				}
