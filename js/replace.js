@@ -9,7 +9,7 @@ chrome.runtime.sendMessage({}, function(response) {
 		var observer = new MutationObserver(function(mutations, observer) {
 			// fired when a mutation occurs
 			
-			console.log("HTMLchanged");
+			// console.log("HTMLchanged");
 			if (canRun){
 				canRun = false;
 			    setTimeout(function afterMs(){ //triger Xms after event
@@ -61,9 +61,7 @@ chrome.runtime.sendMessage({}, function(response) {
 		// };
 
 		function replace(){
-			// if (!isEnabled()) return;
-
-			var start = new Date().getTime();
+			// var start = new Date().getTime();
 
 			var x = document.getElementsByTagName("SPAN"); //all tag <span></span>
 			replaceFBEmo(x); //replace facebook emo first
@@ -76,9 +74,9 @@ chrome.runtime.sendMessage({}, function(response) {
 			x = document.getElementsByTagName("DIV"); //all tag <div></div>
 			replaceByTag(x);
 
-			var end = new Date().getTime();
-			var time = end - start;
-			console.log("Run............ "+ time + "ms");	
+			// var end = new Date().getTime();
+			// var time = end - start;
+			// console.log("Run............ "+ time + "ms");	
 		}
 
 		/**
