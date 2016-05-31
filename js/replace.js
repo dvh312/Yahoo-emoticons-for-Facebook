@@ -34,9 +34,9 @@ function htmlChangedListener(){
 	});
 }
 function replace(){
-	var start = new Date().getTime();
+	// var start = new Date().getTime();
 
-	// var x = document.getElementsByTagName("SPAN"); //all tag <span></span>
+	var x = document.getElementsByTagName("SPAN"); //all tag <span></span>
 	replaceFBEmo(x); //replace facebook emo FIRST - all in leaf node
 
 	//change key combination to emo
@@ -209,7 +209,7 @@ function containSpecialChar(str){
 	return false;
 }
 var specialChar = ['!', '"', '#', '$', '%', '&', '\'', '(', ')', '*', '+', ',', '-', '.', '/', ';', '<', '=', '>', '?', '@', '\\', ']', '^', '_', '`', '|', '}', '~', '{', ':'];
-var basicEmo = [1,2,3,4,8,10,11,13,15,16,17,22,46];
+var basicEmo = [1,2,3,4,8,10,11,13,15,16,17,20,21,22,46];
 var keyComb = [
 	":)",
 	":(",

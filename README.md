@@ -5,6 +5,7 @@ Show Yahoo Emoticons for Facebook and Messenger.
 
 Version 1.7.2
 - Increase performence
+- Optional '-' character for some basic emoticons
 
 Version 1.7.1
 - Will not run the script while user typing, scrolling
