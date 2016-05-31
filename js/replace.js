@@ -121,15 +121,9 @@ function replaceFBEmo(x){
 function preprocessHTML(innerHTML){
 	//preprocess - replace special char in HTML
 	var res = innerHTML;
-	while(res.includes("&lt;")){
-		res = res.replace("&lt;", "<");
-	}
-	while(res.includes("&gt;")){
-		res = res.replace("&gt;", ">");
-	}
-	while(res.includes("&amp;")){
-		res = res.replace("&amp;", "&");
-	}
+	res = res.replace("&lt;", "<");
+	res = res.replace("&gt;", ">");
+	res = res.replace("&amp;", "&");
 	return res;
 }
 /**
@@ -144,9 +138,7 @@ function changeYHEmo(innerHTML, key, idx){
 	//change yh emo
 	var m = res.match(key);
 	if (m != null){
-		for (var k = 0; k < m.length; k++){
-			res = res.replace(key, getCode(idx));
-		}
+		res = res.replace(key, getCode(idx));
 	}
 	return res;
 }
