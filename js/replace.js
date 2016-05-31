@@ -2,6 +2,7 @@ chrome.runtime.sendMessage({}, function(response) {
 	
 	if (response.isEnable) {
 		var canRun = true; //check if the script is running
+		var idle = true;
 
 		//HTML changed eventListener
 		MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
@@ -16,7 +17,7 @@ chrome.runtime.sendMessage({}, function(response) {
 			    	canRun = true;
 			    	setTimeout(function afterMs(){ 
 			    		//consider as HTML continuously change if canRun is set back to false
-			    		if (canRun) replace();
+			    		if (canRun && idle) replace();
 			    	}, 25);    	
 				}, 250);
 			}
@@ -31,37 +32,32 @@ chrome.runtime.sendMessage({}, function(response) {
 
 
 
-		// document.onscroll = function(e){
-		// 	console.log("scroll");
-		// 	if (canRun){
-		// 		canRun = false;
-		// 	    setTimeout(function after1000ms(){
-		// 	    	canRun = true;
-		// 	    	setTimeout(function after100ms(){ 
-		// 	    		//consider as scrolling if canRun is set back to false
-		// 	    		if (canRun) replace();
-		// 	    	}, 100);
-			    	
-		// 	    }, 1000);
-		// 	}
-		// }
-		// document.onkeypress = function(e) {
-		// 	console.log("keyPressed");
-		//     if (canRun){
-		// 		canRun = false;
-		// 	    setTimeout(function after1000ms(){
-		// 	    	canRun = true;
-		// 	    	setTimeout(function after100ms(){ 
-		// 	    		//consider as scrolling if canRun is set back to false
-		// 	    		if (canRun) replace();
-		// 	    	}, 100);
-			    	
-		// 	    }, 1000);
-		// 	}
-		// };
+		document.onscroll = function(e){
+			// console.log("scroll");
+			notIdle();
+		}
+		document.onkeypress = function(e){
+			// console.log("keypress");
+			notIdle();
+		}
+		document.onmousemove = function(e){
+			// console.log("mousemove");
+			notIdle();
+		}
+		document.onclick = function(e){
+			// console.log("mouseclick");
+			notIdle();
+		}
+
+		function notIdle(){
+			if (idle){
+				idle = false;
+				setTimeout(idle = true, 250);
+			}
+		}
 
 		function replace(){
-			// var start = new Date().getTime();
+			var start = new Date().getTime();
 
 			var x = document.getElementsByTagName("SPAN"); //all tag <span></span>
 			replaceFBEmo(x); //replace facebook emo first
@@ -74,9 +70,9 @@ chrome.runtime.sendMessage({}, function(response) {
 			x = document.getElementsByTagName("DIV"); //all tag <div></div>
 			replaceByTag(x);
 
-			// var end = new Date().getTime();
-			// var time = end - start;
-			// console.log("Run............ "+ time + "ms");	
+			var end = new Date().getTime();
+			var time = end - start;
+			console.log("Run............ "+ time + "ms");	
 		}
 
 		/**
