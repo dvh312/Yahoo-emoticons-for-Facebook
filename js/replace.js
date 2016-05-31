@@ -94,11 +94,8 @@ function replaceByTag(x){
  */
 function replaceFBEmo(x){
 	for (var i = 0; i < x.length; i++){
-		if (x[i].hasAttribute("done")) continue;
+		// if (x[i].hasAttribute("done")) continue;
 		if (x[i].childElementCount > 0) continue;
-		
-
-		var changed = false;
 		if (x[i].tagName == "SPAN"){
 			if (x[i].hasAttribute("title")){
 				for (var j = keyComb.length - 1; j >= 0; j--){
@@ -113,7 +110,6 @@ function replaceFBEmo(x){
 				}
 			}
 		}
-		if (changed) x[i].setAttribute("done", "1");
 	}
 }
 /**
