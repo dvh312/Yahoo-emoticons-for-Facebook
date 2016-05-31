@@ -23,17 +23,6 @@ chrome.browserAction.onClicked.addListener(function(tab) {
 });
 
 chrome.runtime.onMessage.addListener( function(request, sender, sendResponse) {
-
-    if (isEnable)
-    	chrome.browserAction.setIcon({
-            path: "./images/icon.png"
-        });
-    else {
-    	chrome.browserAction.setIcon({
-            path: "./images/iconblack.png"
-        });
-    }
-
     sendResponse({isEnable: isEnable});
 });
 
