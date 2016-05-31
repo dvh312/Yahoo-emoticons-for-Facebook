@@ -3,6 +3,9 @@ A chrome extension can change Facebook text in messages, posts, comments into Ya
 
 Show Yahoo Emoticons for Facebook and Messenger.
 
+Version 1.7.2
+- Increase performence
+
 Version 1.7.1
 - Will not run the script while user typing, scrolling
 

@@ -36,7 +36,7 @@ function htmlChangedListener(){
 function replace(){
 	var start = new Date().getTime();
 
-	var x = document.getElementsByTagName("SPAN"); //all tag <span></span>
+	// var x = document.getElementsByTagName("SPAN"); //all tag <span></span>
 	replaceFBEmo(x); //replace facebook emo FIRST - all in leaf node
 
 	//change key combination to emo
@@ -50,9 +50,9 @@ function replace(){
 	replaceByTag(x);
 
 
-	var end = new Date().getTime();
-	var time = end - start;
-	console.log("Run............ "+ time + "ms");	
+	// var end = new Date().getTime();
+	// var time = end - start;
+	// console.log("Run............ "+ time + "ms");	
 }
 /**
  * replace the HTML element with image code
