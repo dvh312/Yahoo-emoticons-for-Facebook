@@ -89,15 +89,9 @@ function replaceByTag(x){
 					text = text.replace(key, "");
 
 					if (j == 137){ //if BUZZ detected
-						//play sound
-						var buzzAudio = new Audio();
-						buzzAudio.src = chrome.extension.getURL("sounds/buzz.mp3");
-						buzzAudio.play();
-
-						//send request to show notification
-						
+						//send request to show notification and play sound
 						chrome.runtime.sendMessage({
-							showNotification: true,
+							buzzActivated: true,
 							senderName: getSenderName(x[i])
 						});
 					}

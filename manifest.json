@@ -31,6 +31,7 @@
 
   "permissions": [
     "notifications",
+    "contextMenus",
     "https://www.facebook.com/*",
     "https://www.messenger.com/*"
   ]

@@ -2,8 +2,17 @@
 reloadTabsURL("https://www.facebook.com/*");
 reloadTabsURL("https://www.messenger.com/*");
 
+//turn off BUZZ
+chrome.contextMenus.create({
+    id: "toggle-buzz-contextMenu",
+    title: "Turn off BUZZ",
+    contexts:["all"],
+    onclick: toggleBuzz,
+});
+
 //initial the isEnable value
 var isEnable = true;
+var buzzEnabled = true;
 
 //Toggle button - Enable/Disable the extension
 chrome.browserAction.onClicked.addListener(function(tab) {
@@ -30,8 +39,10 @@ chrome.runtime.onMessage.addListener( function(request, sender, sendResponse) {
     sendResponse({isEnable: isEnable});
 
     //check if having BUZZ notification request
-    if (request.showNotification){
-        showBuzzNotification(request.senderName);
+    if (request.buzzActivated){
+        if (buzzEnabled){
+            showBuzzNotification(request.senderName);
+        }
     }
 });
 
@@ -51,6 +62,18 @@ function showBuzzNotification(senderName){
         message: "BUZZ!!!" 
     },
     function() {
-
+        //play sound
+        var buzzAudio = new Audio();
+        buzzAudio.src = "sounds/buzz.mp3";
+        buzzAudio.play();
     });
+}
+
+function toggleBuzz(){
+    buzzEnabled = !buzzEnabled;
+    if (buzzEnabled){
+        chrome.contextMenus.update('toggle-buzz-contextMenu', {title: "Turn off BUZZ"});
+    } else {
+        chrome.contextMenus.update('toggle-buzz-contextMenu', {title: "Turn on BUZZ"});
+    }
 }
