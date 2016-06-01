@@ -34,7 +34,7 @@ function htmlChangedListener(){
 	});
 }
 function replace(){
-	// var start = new Date().getTime();
+	var start = new Date().getTime();
 
 	var x = document.getElementsByTagName("SPAN"); //all tag <span></span>
 	replaceFBEmo(x); //replace facebook emo FIRST - all in leaf node
@@ -50,9 +50,9 @@ function replace(){
 	replaceByTag(x);
 
 
-	// var end = new Date().getTime();
-	// var time = end - start;
-	// console.log("Run............ "+ time + "ms");	
+	var end = new Date().getTime();
+	var time = end - start;
+	console.log("Run............ "+ time + "ms");	
 }
 /**
  * replace the HTML element with image code
@@ -76,15 +76,32 @@ function replaceByTag(x){
 		if (!containSpecialChar(text)) continue; //tweak,only run possible text
 
 		//search textContent inside the element for emoticon key combination
+		var processedHTML = preprocessHTML(x[i].innerHTML); //change > < and & back to normal
+		var changed = false;
 		for (var j = keyComb.length - 1; j >= 0; j--){
-			if (j + 1 < 80 || j + 1 > 99){
+			if (keyComb[j] != ""){
 				var key = toRegex(keyComb[j], j);
 
-				if (text.match(key) != null){
-					processed = preprocessHTML(x[i].innerHTML);
-					if (x[i].tagName == "U") x[i].outerHTML = changeYHEmo(processed, key, j);
-					else x[i].innerHTML = changeYHEmo(processed, key, j);
+				if (text.match(key)){ //only replace HTML in the node which have key in textContent
+					//replace key in innerHTML to img (if any)
+					processedHTML = processedHTML.replace(key, getCode(j));
+
+					//remove in text after replaced in innerHTML (if any)
+					text = text.replace(key, "");
+
+					//mark as changed to save the result back to element
+					changed = true;
 				}
+			}
+		}
+		if (changed){ //only change if emoticon detected
+			if (x[i].tagName == "U"){
+				//cannot add img child node inside tag <u>, 
+				//so have replace the whole tag
+				x[i].outerHTML = processedHTML;
+			} else{
+				//for p, span, div tag can have img child node
+				x[i].innerHTML = processedHTML;
 			}
 		}
 	}
@@ -106,7 +123,6 @@ function replaceFBEmo(x){
 						if (match != null){
 							if (match[0] == x[i].title){
 								x[i].outerHTML = getCode(j);
-								changed = true;
 								break;
 							}
 						}
@@ -121,28 +137,12 @@ function replaceFBEmo(x){
  * @param  {string} innerHTML element.innerHTML
  * @return {string}           processed string
  */
-function preprocessHTML(innerHTML){
+function preprocessHTML(str){
 	//preprocess - replace special char in HTML
-	var res = innerHTML;
-	res = res.replace("&lt;", "<");
-	res = res.replace("&gt;", ">");
-	res = res.replace("&amp;", "&");
-	return res;
-}
-/**
- * Change all keys (if any) in innerHTML to img if matched keyComb[idx]
- * @param  {string} innerHTML innerHTML of current element
- * @param  {string} key       regex key combination for keyComb[idx]
- * @param  {int} idx       	  index of the query key
- * @return {string}			  processed string 
- */
-function changeYHEmo(innerHTML, key, idx){
-	var res = innerHTML;
-	//change yh emo
-	var m = res.match(key);
-	if (m != null){
-		res = res.replace(key, getCode(idx));
-	}
+	var res = str;
+	res = res.replace(/&lt;/g, "<");
+	res = res.replace(/&gt;/g, ">");
+	res = res.replace(/&amp;/g, "&");
 	return res;
 }
 /**
