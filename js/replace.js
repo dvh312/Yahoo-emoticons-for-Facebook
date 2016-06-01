@@ -1,6 +1,5 @@
 var canRun = true; //check if the script is running
 
-
 chrome.runtime.sendMessage({}, function(response) {
 	if (response.isEnable) {
 		htmlChangedListener();
@@ -34,7 +33,7 @@ function htmlChangedListener(){
 	});
 }
 function replace(){
-	var start = new Date().getTime();
+	// var start = new Date().getTime();
 
 	var x = document.getElementsByTagName("SPAN"); //all tag <span></span>
 	replaceFBEmo(x); //replace facebook emo FIRST - all in leaf node
@@ -50,13 +49,13 @@ function replace(){
 	replaceByTag(x);
 
 
-	var end = new Date().getTime();
-	var time = end - start;
-	console.log("Run............ "+ time + "ms");	
+	// var end = new Date().getTime();
+	// var time = end - start;
+	// console.log("Run............ "+ time + "ms");	
 }
 /**
  * replace the HTML element with image code
- * @param  {x} x array
+ * @param  {array} x elements array
  */
 function replaceByTag(x){
 	for (var i = 0; i < x.length; i++){
@@ -134,7 +133,7 @@ function replaceFBEmo(x){
 }
 /**
  * change special char > < and & in innerHTML back
- * @param  {string} innerHTML element.innerHTML
+ * @param  {string} str element.innerHTML
  * @return {string}           processed string
  */
 function preprocessHTML(str){
