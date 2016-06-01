@@ -78,7 +78,7 @@ function replaceByTag(x){
 		var processedHTML = preprocessHTML(x[i].innerHTML); //change > < and & back to normal
 		var changed = false;
 		for (var j = keyComb.length - 1; j >= 0; j--){
-			if (keyComb[j] != ""){
+			if (keyComb[j].length > 0){
 				var key = toRegex(keyComb[j], j);
 
 				if (text.match(key)){ //only replace HTML in the node which have key in textContent
@@ -88,12 +88,28 @@ function replaceByTag(x){
 					//remove in text after replaced in innerHTML (if any)
 					text = text.replace(key, "");
 
+					if (j == 137){ //if BUZZ detected
+						//play sound
+						var buzzAudio = new Audio();
+						buzzAudio.src = chrome.extension.getURL("sounds/buzz.mp3");
+						buzzAudio.play();
+
+						//send request to show notification
+						
+						chrome.runtime.sendMessage({
+							showNotification: true,
+							senderName: getSenderName(x[i])
+						});
+					}
+
 					//mark as changed to save the result back to element
 					changed = true;
 				}
 			}
 		}
-		if (changed){ //only change if emoticon detected
+
+		//only change if emoticon detected
+		if (changed){
 			if (x[i].tagName == "U"){
 				//cannot add img child node inside tag <u>, 
 				//so have replace the whole tag
@@ -116,7 +132,7 @@ function replaceFBEmo(x){
 		if (x[i].tagName == "SPAN"){
 			if (x[i].hasAttribute("title")){
 				for (var j = keyComb.length - 1; j >= 0; j--){
-					if (j + 1 < 80 || j + 1 > 99){
+					if (keyComb[j].length > 0){
 						var key = toRegex(keyComb[j], j);
 						var match = x[i].title.match(key);
 						if (match != null){
@@ -150,9 +166,13 @@ function preprocessHTML(str){
  * @return {string}    the code to inject into HTML
  */
 function getCode(id){
-	var s = "\"" + chrome.extension.getURL("images/YahooEmoticons/" + (id + 1) + ".gif") + "\"";
-	var res = "<img src=" + s + ">";
-	return res;
+	if (id == 137){ //if BUZZ then go to different code
+		return "<span style=\"color: red; font-weight: bold;\">BUZZ!!!</span>";
+	} else {
+		var s = "\"" + chrome.extension.getURL("images/YahooEmoticons/" + (id + 1) + ".gif") + "\"";
+		var res = "<img src=" + s + ">";
+		return res;
+	}
 }
 function preg_quote( str ) {
     // http://kevin.vanzonneveld.net
@@ -202,6 +222,16 @@ function containSpecialChar(str){
 	}
 	return false;
 }
+function getSenderName(element){
+	if (element.tagName == "BODY") return "Cannot get username";
+	if (element.hasAttribute("class")){
+		if (element.className == "fbNubFlyoutOuter"){
+			return element.getElementsByClassName("fbNubFlyoutTitlebar")[0].textContent;
+		}
+	}
+	return getSenderName(element.parentNode);
+}
+
 var specialChar = ['!', '"', '#', '$', '%', '&', '\'', '(', ')', '*', '+', ',', '-', '.', '/', ';', '<', '=', '>', '?', '@', '\\', ']', '^', '_', '`', '|', '}', '~', '{', ':'];
 var basicEmo = [1,2,3,4,8,10,11,13,15,16,17,20,21,22,46];
 var keyComb = [
@@ -344,4 +374,5 @@ var keyComb = [
 	":(game)",
 	":-)/\\:-)",
 	"[]==[]",
+	"<ding>",
 ];

@@ -21,7 +21,8 @@
   ],
 
   "web_accessible_resources": [
-    "images/YahooEmoticons/*"
+    "images/YahooEmoticons/*",
+    "sounds/*"
   ],
 
   "icons": { "16": "images/icon16.png",
@@ -29,6 +30,7 @@
           "128": "images/icon128.png" },
 
   "permissions": [
+    "notifications",
     "https://www.facebook.com/*",
     "https://www.messenger.com/*"
   ]

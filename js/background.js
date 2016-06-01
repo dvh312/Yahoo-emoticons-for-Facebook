@@ -28,6 +28,11 @@ chrome.browserAction.onClicked.addListener(function(tab) {
 
 chrome.runtime.onMessage.addListener( function(request, sender, sendResponse) {
     sendResponse({isEnable: isEnable});
+
+    //check if having BUZZ notification request
+    if (request.showNotification){
+        showBuzzNotification(request.senderName);
+    }
 });
 
 function reloadTabsURL(queryUrl){
@@ -36,4 +41,16 @@ function reloadTabsURL(queryUrl){
 			chrome.tabs.reload(tabs[i].id);
 		}
 	});
+}
+
+function showBuzzNotification(senderName){
+    chrome.notifications.create('buzz-notification',{   
+        type: 'basic', 
+        iconUrl: 'images/icon.png', 
+        title: senderName, 
+        message: "BUZZ!!!" 
+    },
+    function() {
+
+    });
 }

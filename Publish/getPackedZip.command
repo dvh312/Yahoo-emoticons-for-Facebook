@@ -4,6 +4,7 @@ cd "`dirname \"$0\"`" || exit 1
 
 mkdir Packed
 cp -r ../images ./Packed/images/
+cp -r ../sounds ./Packed/sounds/
 cp -r ../js ./Packed/js/
 cp ../manifest.json ./Packed/manifest.json
 for file in ./Packed/js/*.js; do
