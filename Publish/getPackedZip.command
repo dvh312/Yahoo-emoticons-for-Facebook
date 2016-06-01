@@ -1,3 +1,4 @@
+cd `dirname $0`
 mkdir Packed
 cp -r ../images ./Packed/images/
 cp -r ../js ./Packed/js/
