@@ -3,6 +3,9 @@ A chrome extension can change Facebook text in messages, posts, comments into Ya
 
 Show Yahoo Emoticons for Facebook and Messenger.
 
+Version 1.7.4
+- Fix bug cannot show >:D< 2 times in one line
+
 Version 1.7.3
 - Decrease loading speed
 - Fix :poop: emoticon
