@@ -1,4 +1,7 @@
-cd `dirname $0`
+here="`dirname \"$0\"`"
+echo "cd-ing to $here"
+cd "`dirname \"$0\"`" || exit 1
+
 mkdir Packed
 cp -r ../images ./Packed/images/
 cp -r ../js ./Packed/js/
