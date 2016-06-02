@@ -36,7 +36,7 @@ function replace(){
 	// var start = new Date().getTime();
 
 	var x = document.getElementsByTagName("SPAN"); //all tag <span></span>
-	replaceFBEmo(x); //replace facebook emo FIRST - all in leaf node
+	replaceBigFBEmo(x); //replace facebook emo FIRST - all in leaf node
 
 	//change key combination to emo
 	x = document.getElementsByTagName("SPAN"); //all tag <span></span>
@@ -87,7 +87,7 @@ function replaceByTag(x){
 					processedHTML = processedHTML.replace(key, getCode(j));
 
 					//detect the replacement of fb emoticon
-					console.log(x[i].parentNode.outerHTML);
+					console.log(processedHTML);
 					if (x[i].parentNode.hasAttribute("title")){
 						var titles = x[i].parentNode.title.split(' ');
 						for (var k = 0; k < titles.length; k++){
@@ -134,7 +134,7 @@ function replaceByTag(x){
  * replace BIG facebook emo in chatbox - leaf node with span tag
  * @param  {array} x elements
  */
-function replaceFBEmo(x){
+function replaceBigFBEmo(x){
 	for (var i = 0; i < x.length; i++){
 		// if (x[i].hasAttribute("done")) continue;
 		if (x[i].childElementCount > 0) continue;
