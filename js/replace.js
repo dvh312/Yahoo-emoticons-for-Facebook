@@ -60,6 +60,7 @@ function replace(){
  * @param  {array} x elements array
  */
 function replaceByTag(x){
+	var nodesToBeRemoved = [];
 	for (var i = 0; i < x.length; i++){
 		if (x[i].hasAttribute("done")) continue;
 		if (x[i].hasAttribute("data-text")) continue; //attribute data-text show when typing,
@@ -71,10 +72,10 @@ function replaceByTag(x){
 			if (x[i].parentNode.title.includes("emoticon")){
 				if (x[i].textContent.length == 0){
 					if (x[i].tagName == "SPAN" && x[i].className.includes("emoticon")){
-						x[i].remove();
+						nodesToBeRemoved[nodesToBeRemoved.length] = x[i];
 						continue;
 					} else if (x[i].tagName == "I"){
-						x[i].remove();
+						nodesToBeRemoved[nodesToBeRemoved.length] = x[i];
 						continue;
 					}
 				}
@@ -112,7 +113,7 @@ function replaceByTag(x){
 				}
 			}
 		}
-		
+
 		if (changed){ //only change if emoticon detected
 			if (x[i].tagName == "U"){
 				//cannot add img child node inside tag <u>, 
@@ -122,6 +123,14 @@ function replaceByTag(x){
 				//for p, span, div tag can have img child node
 				x[i].innerHTML = processedHTML;
 			}
+		}
+	}
+
+	//remove nodes in array nodeTBRemove
+	for (var i = 0; i < nodesToBeRemoved.length; i++){
+		//just remove changed node
+		if (nodesToBeRemoved[i].nextSibling.textContent.length == 0){
+			nodesToBeRemoved[i].remove();
 		}
 	}
 }
