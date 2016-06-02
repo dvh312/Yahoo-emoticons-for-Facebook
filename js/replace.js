@@ -116,7 +116,7 @@ function replaceByTag(x){
 	}
 }
 /**
- * replace facebook emo - leaf node with span tag
+ * replace BIG facebook emo in chatbox - leaf node with span tag
  * @param  {array} x elements
  */
 function replaceFBEmo(x){
