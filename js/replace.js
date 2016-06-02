@@ -85,6 +85,8 @@ function replaceByTag(x){
 				if (text.match(key)){ //only replace HTML in the node which have key in textContent
 					//replace key in innerHTML to img (if any)
 					processedHTML = processedHTML.replace(key, getCode(j));
+
+					//detect the replacement of fb emoticon
 					console.log(x[i].parentNode.outerHTML);
 					if (x[i].parentNode.hasAttribute("title")){
 						var titles = x[i].parentNode.title.split(' ');
