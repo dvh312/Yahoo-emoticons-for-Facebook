@@ -141,7 +141,7 @@ function replaceFBEmo(x){
 		if (x[i].tagName == "SPAN"){
 			if (x[i].hasAttribute("title")){
 				for (var j = keyComb.length - 1; j >= 0; j--){
-					if (j + 1 < 80 || j + 1 > 99){
+					if (keyComb[j] == ""){
 						var key = toRegex(keyComb[j], j);
 						var match = x[i].title.match(key);
 						if (match != null){
