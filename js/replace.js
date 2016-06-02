@@ -107,13 +107,12 @@ function replaceByTag(x){
 					//remove in text after replaced in innerHTML (if any)
 					text = text.replace(key, "");
 
-
-
 					//mark as changed to save the result back to element
 					changed = true;
 				}
 			}
 		}
+		
 		if (changed){ //only change if emoticon detected
 			if (x[i].tagName == "U"){
 				//cannot add img child node inside tag <u>, 
