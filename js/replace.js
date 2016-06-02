@@ -33,10 +33,10 @@ function htmlChangedListener(){
 	});
 }
 function replace(){
-	// var start = new Date().getTime();
+	var start = new Date().getTime();
 
 	var x = document.getElementsByTagName("SPAN"); //all tag <span></span>
-	replaceFBEmo(x); //replace facebook emo FIRST - all in leaf node
+	replaceBigFBEmo(x); //replace facebook emo FIRST - all in leaf node
 
 	//change key combination to emo
 	x = document.getElementsByTagName("SPAN"); //all tag <span></span>
@@ -45,25 +45,43 @@ function replace(){
 	replaceByTag(x);
 	x = document.getElementsByTagName("DIV"); //all tag <div></div>
 	replaceByTag(x);
-	x = document.getElementsByTagName("U"); //all tag <div></div>
+	x = document.getElementsByTagName("U"); //all tag <u></u>
+	replaceByTag(x);
+	x = document.getElementsByTagName("I"); //all tag <i></i>
 	replaceByTag(x);
 
 
-	// var end = new Date().getTime();
-	// var time = end - start;
-	// console.log("Run............ "+ time + "ms");	
+	var end = new Date().getTime();
+	var time = end - start;
+	console.log("Run............ "+ time + "ms");	
 }
 /**
  * replace the HTML element with image code
  * @param  {array} x elements array
  */
 function replaceByTag(x){
+	var nodesToBeRemoved = [];
 	for (var i = 0; i < x.length; i++){
 		if (x[i].hasAttribute("done")) continue;
 		if (x[i].hasAttribute("data-text")) continue; //attribute data-text show when typing,
 		if (x[i].classList.contains("alternate_name")) continue; //prevent change the alt name
-		
 		x[i].setAttribute("done", "1");
+
+		//remove if the element is a facebook emoticon
+		if (x[i].parentNode.hasAttribute("title")){
+			if (x[i].parentNode.title.includes("emoticon")){
+				if (x[i].textContent.length == 0){
+					if (x[i].tagName == "SPAN" && x[i].className.includes("emoticon")){
+						nodesToBeRemoved[nodesToBeRemoved.length] = x[i];
+						continue;
+					} else if (x[i].tagName == "I"){
+						nodesToBeRemoved[nodesToBeRemoved.length] = x[i];
+						continue;
+					}
+				}
+			}
+		}
+
 		//just get text in this node, not in any child
 		var text = "";
 		for (var j = 0; j < x[i].childNodes.length; j++){
@@ -71,6 +89,8 @@ function replaceByTag(x){
 				text += x[i].childNodes[j].textContent;
 			}
 		}
+
+		//check if have text and contain special char
 		if (text.length == 0) continue;
 		if (!containSpecialChar(text)) continue; //tweak,only run possible text
 
@@ -114,12 +134,21 @@ function replaceByTag(x){
 			}
 		}
 	}
+
+	//remove nodes in array nodeTBRemove
+	for (var i = 0; i < nodesToBeRemoved.length; i++){
+		//just remove changed node
+		if (nodesToBeRemoved[i].nextSibling.textContent.length == 0){
+			nodesToBeRemoved[i].remove();
+		}
+	}
 }
+
 /**
  * replace BIG facebook emo in chatbox - leaf node with span tag
  * @param  {array} x elements
  */
-function replaceFBEmo(x){
+function replaceBigFBEmo(x){
 	for (var i = 0; i < x.length; i++){
 		// if (x[i].hasAttribute("done")) continue;
 		if (x[i].childElementCount > 0) continue;
@@ -204,6 +233,8 @@ function toRegex(str, idx){
 			//Ex: can show :-) if keycomb is :)
 			//
 			temp = temp.replace("\:", "\:-?");
+		} else if (idx == 2){ //show emo for ;-) <-> ;) 
+			temp = temp.replace(";", "\;-?");
 		}
 	}
 	return ( new RegExp( "(" + temp + ")" , 'gi' ) );
