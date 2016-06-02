@@ -87,7 +87,6 @@ function replaceByTag(x){
 					processedHTML = processedHTML.replace(key, getCode(j));
 
 					//detect the replacement of fb emoticon
-					console.log(processedHTML);
 					if (x[i].parentNode.hasAttribute("title")){
 						var titles = x[i].parentNode.title.split(' ');
 						for (var k = 0; k < titles.length; k++){
@@ -141,7 +140,7 @@ function replaceBigFBEmo(x){
 		if (x[i].tagName == "SPAN"){
 			if (x[i].hasAttribute("title")){
 				for (var j = keyComb.length - 1; j >= 0; j--){
-					if (keyComb[j] == ""){
+					if (keyComb[j] != ""){
 						var key = toRegex(keyComb[j], j);
 						var match = x[i].title.match(key);
 						if (match != null){
