@@ -7,19 +7,29 @@ chrome.runtime.sendMessage({}, function(response) {
 		htmlChangedListener();
 	}
 });
+var sum = 0.0;
 function htmlChangedListener(){
 	//HTML changed eventListener
 	MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 
 	var observer = new MutationObserver(function(mutations, observer) {
 		// fired when a mutation occurs
+		// var s = performance.now();
 		mutations.forEach(function(mutation){
 			for (var i = 0; i < mutation.addedNodes.length; i++){
 				if (mutation.addedNodes[i].nodeType == 1){
-					replace(mutation.addedNodes[i].getElementsByTagName("*"));
+					replace(mutation.addedNodes[i].getElementsByTagName("SPAN"));
+					replace(mutation.addedNodes[i].getElementsByTagName("DIV"));
+					replace(mutation.addedNodes[i].getElementsByTagName("U"));
+					replace(mutation.addedNodes[i].getElementsByTagName("I"));
+					replace(mutation.addedNodes[i].getElementsByTagName("P"));
+					replace(mutation.addedNodes[i].getElementsByTagName("IMG"));
 				}
 			}
 		});
+		// var e = performance.now();
+		// console.log("i " + (e-s));
+		// sum += e - s;
 	});
 
 	// define what element should be observed by the observer
@@ -29,7 +39,10 @@ function htmlChangedListener(){
 		childList: true,
 	});
 }
-
+// setInterval(function show(){
+// 	console.log(sum /5000.0 * 100.0 + "%");
+// 	sum = 0;
+// }, 5000);
 function replace(x){
 	//replace facebook emo FIRST - all in leaf node
 	replaceBigFBEmo(x);
