@@ -3,6 +3,7 @@ const debugging = false;
 
 chrome.runtime.sendMessage({}, function(response) {
 	if (response.isEnable) {
+		replace(document.body.getElementsByTagName("*"));
 		htmlChangedListener();
 	}
 });
@@ -12,25 +13,20 @@ function htmlChangedListener(){
 
 	var observer = new MutationObserver(function(mutations, observer) {
 		// fired when a mutation occurs
-		
-		// console.log("HTMLchanged");
-		if (canRun){
-			canRun = false;
-		    setTimeout(function afterMs(){ //triger Xms after event
-		    	canRun = true;
-		    	setTimeout(function afterMs(){ 
-		    		//consider as HTML continuously change if canRun is set back to false
-		    		if (canRun) replace();
-		    	}, 25);    	
-			}, 250);
-		}
+		mutations.forEach(function(mutation){
+			for (var i = 0; i < mutation.addedNodes.length; i++){
+				if (mutation.addedNodes[i].nodeType == 1){
+					replace(mutation.addedNodes[i].getElementsByTagName("*"));
+				}
+			}
+		});
 	});
 
 	// define what element should be observed by the observer
 	// and what types of mutations trigger the callback
 	observer.observe(document, {
-	  subtree: true,
-	  childList: true,
+		subtree: true,
+		childList: true,
 	});
 }
 
@@ -41,31 +37,12 @@ document.onkeydown = function KeyPress(e) {
 	}
 }
 
-function replace(){
-	if (debugging) {
-		var start = new Date().getTime();
-	}
-
-	var x = document.getElementsByTagName("IMG"); //all tag <img></img>
-	replaceBigFBEmo(x); //replace facebook emo FIRST - all in leaf node
+function replace(x){
+	//replace facebook emo FIRST - all in leaf node
+	replaceBigFBEmo(x);
 
 	//change key combination to emo
-	x = document.getElementsByTagName("SPAN"); //all tag <span></span>
 	replaceByTag(x);
-	x = document.getElementsByTagName("P"); //all tag <p></p>
-	replaceByTag(x);
-	x = document.getElementsByTagName("DIV"); //all tag <div></div>
-	replaceByTag(x);
-	x = document.getElementsByTagName("U"); //all tag <u></u>
-	replaceByTag(x);
-	x = document.getElementsByTagName("I"); //all tag <i></i>
-	replaceByTag(x);
-	
-	if (debugging){
-		var end = new Date().getTime();
-		var time = end - start;
-		console.log("Run............ "+ time + "ms");
-	}
 }
 /**
  * replace the HTML element with image code
@@ -74,21 +51,21 @@ function replace(){
 function replaceByTag(x){
 	var nodesToBeRemoved = [];
 	for (var i = 0; i < x.length; i++){
-		if (x[i].hasAttribute("done")) continue;
 		if (x[i].hasAttribute("data-text")) continue; //attribute data-text show when typing,
 		if (x[i].classList.contains("alternate_name")) continue; //prevent change the alt name
-		x[i].setAttribute("done", "1");
 
 		//remove if the element is a facebook emoticon
-		if (x[i].parentNode.hasAttribute("title")){
-			if (x[i].parentNode.title.includes("emoticon")){
-				if (x[i].textContent.length == 0){
-					if (x[i].tagName == "SPAN" && x[i].className.includes("emoticon")){
-						nodesToBeRemoved[nodesToBeRemoved.length] = x[i];
-						continue;
-					} else if (x[i].tagName == "I"){
-						nodesToBeRemoved[nodesToBeRemoved.length] = x[i];
-						continue;
+		if (x[i].parentNode != null){
+			if (x[i].parentNode.hasAttribute("title")){
+				if (x[i].parentNode.title.includes("emoticon")){
+					if (x[i].textContent.length == 0){
+						if (x[i].tagName == "SPAN" && x[i].className.includes("emoticon")){
+							nodesToBeRemoved[nodesToBeRemoved.length] = x[i];
+							continue;
+						} else if (x[i].tagName == "I"){
+							nodesToBeRemoved[nodesToBeRemoved.length] = x[i];
+							continue;
+						}
 					}
 				}
 			}
@@ -162,10 +139,7 @@ function replaceByTag(x){
  */
 function replaceBigFBEmo(x){
 	for (var i = 0; i < x.length; i++){
-		// if (x[i].hasAttribute("done")) continue;
-		if (x[i].childElementCount > 0) continue;
-
-		if (x[i].hasAttribute("title") || x[i].parentNode.hasAttribute("title")){
+		if (x[i].hasAttribute("title") || (x[i].parentNode != null && x[i].parentNode.hasAttribute("title"))){
 			var node;
 			if (x[i].hasAttribute("title")) {
 				node = x[i];
@@ -180,7 +154,11 @@ function replaceBigFBEmo(x){
 						var match = node.title.match(key);
 						if (match != null){
 							if (match[0] == node.title){
-								node.outerHTML = getCode(j);
+								if (node.parentNode == null){
+									node.innerHTML = getCode(j);
+								} else {
+									node.outerHTML = getCode(j);
+								}
 								break;
 							}
 						}
