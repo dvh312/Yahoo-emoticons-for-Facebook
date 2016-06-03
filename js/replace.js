@@ -35,7 +35,7 @@ function htmlChangedListener(){
 function replace(){
 	var start = new Date().getTime();
 
-	var x = document.getElementsByTagName("SPAN"); //all tag <span></span>
+	var x = document.getElementsByTagName("IMG"); //all tag <img></img>
 	replaceBigFBEmo(x); //replace facebook emo FIRST - all in leaf node
 
 	//change key combination to emo
@@ -143,15 +143,23 @@ function replaceBigFBEmo(x){
 	for (var i = 0; i < x.length; i++){
 		// if (x[i].hasAttribute("done")) continue;
 		if (x[i].childElementCount > 0) continue;
-		if (x[i].tagName == "SPAN"){
-			if (x[i].hasAttribute("title")){
+
+		if (x[i].hasAttribute("title") || x[i].parentNode.hasAttribute("title")){
+			var node;
+			if (x[i].hasAttribute("title")) {
+				node = x[i];
+			} else {
+				node = x[i].parentNode;
+			}
+
+			if (node.hasAttribute("title")){
 				for (var j = keyComb.length - 1; j >= 0; j--){
 					if (keyComb[j] != ""){
 						var key = toRegex(keyComb[j], j);
-						var match = x[i].title.match(key);
+						var match = node.title.match(key);
 						if (match != null){
-							if (match[0] == x[i].title){
-								x[i].outerHTML = getCode(j);
+							if (match[0] == node.title){
+								node.outerHTML = getCode(j);
 								break;
 							}
 						}
