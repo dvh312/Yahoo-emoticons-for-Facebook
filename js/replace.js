@@ -33,6 +33,14 @@ function htmlChangedListener(){
 	  childList: true,
 	});
 }
+
+document.onkeydown = function KeyPress(e) {
+	var evtobj = window.event? event : e
+	if (evtobj.keyCode == 71 && evtobj.ctrlKey){
+		alert("Ctrl+g");
+	}
+}
+
 function replace(){
 	if (debugging) {
 		var start = new Date().getTime();
