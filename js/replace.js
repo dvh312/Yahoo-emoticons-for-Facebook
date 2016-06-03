@@ -1,4 +1,5 @@
 var canRun = true; //check if the script is running
+const debugging = false;
 
 chrome.runtime.sendMessage({}, function(response) {
 	if (response.isEnable) {
@@ -33,7 +34,9 @@ function htmlChangedListener(){
 	});
 }
 function replace(){
-	var start = new Date().getTime();
+	if (debugging) {
+		var start = new Date().getTime();
+	}
 
 	var x = document.getElementsByTagName("IMG"); //all tag <img></img>
 	replaceBigFBEmo(x); //replace facebook emo FIRST - all in leaf node
@@ -49,11 +52,12 @@ function replace(){
 	replaceByTag(x);
 	x = document.getElementsByTagName("I"); //all tag <i></i>
 	replaceByTag(x);
-
-
-	var end = new Date().getTime();
-	var time = end - start;
-	console.log("Run............ "+ time + "ms");	
+	
+	if (debugging){
+		var end = new Date().getTime();
+		var time = end - start;
+		console.log("Run............ "+ time + "ms");
+	}
 }
 /**
  * replace the HTML element with image code
