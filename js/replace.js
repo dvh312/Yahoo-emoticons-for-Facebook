@@ -114,6 +114,7 @@ function replaceByTag(x){
 							buzzActivated: true,
 							senderName: getSenderName(x[i])
 						});
+						$( ".fbNubFlyoutOuter" ).effect( "shake" );
 					}
 
 					//mark as changed to save the result back to element
