@@ -249,11 +249,12 @@ function containSpecialChar(str){
 	return false;
 }
 function getSenderName(element){
-	if (element.tagName == "BODY") return "Cannot get username";
-	if (element.hasAttribute("class")){
-		if (element.className == "fbNubFlyoutOuter"){
-			return element.getElementsByClassName("fbNubFlyoutTitlebar")[0].textContent;
-		}
+	if (element.tagName == "BODY") return "Someone ^_^";
+
+	if (element.className == "fbNubFlyoutOuter"){
+		return element.getElementsByClassName("fbNubFlyoutTitlebar")[0].textContent;
+	} else if (element.className == "content"){
+		return element.getElementsByClassName("author fixemoji")[0].children[0].textContent;
 	}
 	return getSenderName(element.parentNode);
 }
