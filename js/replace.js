@@ -18,12 +18,7 @@ function htmlChangedListener(){
 		mutations.forEach(function(mutation){
 			for (var i = 0; i < mutation.addedNodes.length; i++){
 				if (mutation.addedNodes[i].nodeType == 1){
-					replace(mutation.addedNodes[i].getElementsByTagName("SPAN"));
-					replace(mutation.addedNodes[i].getElementsByTagName("DIV"));
-					replace(mutation.addedNodes[i].getElementsByTagName("U"));
-					replace(mutation.addedNodes[i].getElementsByTagName("I"));
-					replace(mutation.addedNodes[i].getElementsByTagName("P"));
-					replace(mutation.addedNodes[i].getElementsByTagName("IMG"));
+					replace(mutation.addedNodes[i].getElementsByTagName("*"));
 				}
 			}
 		});
