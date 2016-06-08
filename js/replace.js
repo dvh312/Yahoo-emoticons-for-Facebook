@@ -39,8 +39,8 @@ function htmlChangedListener(){
 // 	sum = 0;
 // }, 5000);
 function replace(x){
-	//replace facebook emo FIRST - all in leaf node
-	replaceBigFBEmo(x);
+	//replace facebook emo FIRST
+	replaceChatFBBig(x);
 
 	//change key combination to emo
 	replaceByTag(x);
@@ -129,30 +129,23 @@ function replaceByTag(x){
  * replace BIG facebook emo in chatbox - leaf node with span tag
  * @param  {array} x elements
  */
-function replaceBigFBEmo(x){
+function replaceChatFBBig(x){
+	//process on parent span node contains title = keycomb, child img 
 	for (var i = 0; i < x.length; i++){
-		if (x[i].hasAttribute("title") || (x[i].parentNode != null && x[i].parentNode.hasAttribute("title"))){
-			var node;
-			if (x[i].hasAttribute("title")) {
-				node = x[i];
-			} else {
-				node = x[i].parentNode;
-			}
+		//check if person type the emo in with keycombine
+		if (x[i].hasAttribute("title")){
+			//check if any yahoo emo match the title
+			for (var j = keyComb.length - 1; j >= 0; j--){
+				if (keyComb[j] != ""){
+					var key = toRegex(keyComb[j], j);
 
-			if (node.hasAttribute("title")){
-				for (var j = keyComb.length - 1; j >= 0; j--){
-					if (keyComb[j] != ""){
-						var key = toRegex(keyComb[j], j);
-						var match = node.title.match(key);
-						if (match != null){
-							if (match[0] == node.title){
-								if (node.parentNode == null){
-									node.innerHTML = getCode(j);
-								} else {
-									node.outerHTML = getCode(j);
-								}
-								break;
-							}
+					//check for exact match with the key combination
+					var matches = x[i].title.match(key);
+					if (matches != null){
+						if (matches[0] == x[i].title){
+							//change HTML code
+							x[i].innerHTML = getCode(j);
+							break;
 						}
 					}
 				}
