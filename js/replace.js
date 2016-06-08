@@ -43,7 +43,7 @@ function replace(x){
 	replaceChatFBBig(x);
 
 	//change key combination to emo
-	replaceByTag(x);
+	// replaceByTag(x);
 }
 /**
  * replace the HTML element with image code
@@ -56,17 +56,15 @@ function replaceByTag(x){
 		if (x[i].classList.contains("alternate_name")) continue; //prevent change the alt name
 
 		//remove if the element is a facebook emoticon
-		if (x[i].parentNode != null){
-			if (x[i].parentNode.hasAttribute("title")){
-				if (x[i].parentNode.title.includes("emoticon")){
-					if (x[i].textContent.length == 0){
-						if (x[i].tagName == "SPAN" && x[i].className.includes("emoticon")){
-							nodesToBeRemoved[nodesToBeRemoved.length] = x[i];
-							continue;
-						} else if (x[i].tagName == "I"){
-							nodesToBeRemoved[nodesToBeRemoved.length] = x[i];
-							continue;
-						}
+		if (x[i].parentNode != null && x[i].parentNode.hasAttribute("title")){
+			if (x[i].parentNode.title.includes("emoticon")){
+				if (x[i].textContent.length == 0){
+					if (x[i].tagName == "SPAN" && x[i].className.includes("emoticon")){
+						nodesToBeRemoved[nodesToBeRemoved.length] = x[i];
+						continue;
+					} else if (x[i].tagName == "I"){
+						nodesToBeRemoved[nodesToBeRemoved.length] = x[i];
+						continue;
 					}
 				}
 			}
@@ -133,19 +131,23 @@ function replaceChatFBBig(x){
 	//process on parent span node contains title = keycomb, child img 
 	for (var i = 0; i < x.length; i++){
 		//check if person type the emo in with keycombine
-		if (x[i].hasAttribute("title")){
-			//check if any yahoo emo match the title
-			for (var j = keyComb.length - 1; j >= 0; j--){
-				if (keyComb[j] != ""){
-					var key = toRegex(keyComb[j], j);
+		if (x[i].tagName == "SPAN"){
+			if (x[i].hasAttribute("title")){
+				if (x[i].children.length == 1 && x[i].children[0].tagName == "IMG"){
+					//check if any yahoo emo match the title
+					for (var j = keyComb.length - 1; j >= 0; j--){
+						if (keyComb[j] != ""){
+							var key = toRegex(keyComb[j], j);
 
-					//check for exact match with the key combination
-					var matches = x[i].title.match(key);
-					if (matches != null){
-						if (matches[0] == x[i].title){
-							//change HTML code
-							x[i].innerHTML = getCode(j);
-							break;
+							//check for exact match with the key combination
+							var matches = x[i].title.match(key);
+							if (matches != null){
+								if (matches[0] == x[i].title){
+									//change HTML code
+									x[i].innerHTML = getCode(j);
+									break;
+								}
+							}
 						}
 					}
 				}
