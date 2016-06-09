@@ -1,5 +1,4 @@
 var canRun = true; //check if the script is running
-const debugging = false;
 
 chrome.runtime.sendMessage({}, function(response) {
 	if (response.isEnable) {
@@ -7,14 +6,14 @@ chrome.runtime.sendMessage({}, function(response) {
 		htmlChangedListener();
 	}
 });
-var sum = 0;
+// var sum = 0;
 function htmlChangedListener(){
 	//HTML changed eventListener
 	MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 
 	var observer = new MutationObserver(function(mutations, observer) {
 		// fired when a mutation occurs
-		var s = performance.now();
+		// var s = performance.now();
 		mutations.forEach(function(mutation){
 			for (var i = 0; i < mutation.addedNodes.length; i++){
 				if (mutation.addedNodes[i].nodeType == 1){
@@ -22,9 +21,9 @@ function htmlChangedListener(){
 				}
 			}
 		});
-		var e = performance.now();
-		sum += e-s;
-		console.log("running... " + sum);
+		// var e = performance.now();
+		// sum += e-s;
+		// console.log("running... " + sum);
 
 	});
 
@@ -40,10 +39,6 @@ function replace(x){
 	replaceChatFBBig(x);
 	replaceText(x);
 	// replaceByTag(x);
-
-
-	//change key combination to emo
-
 }
 function replaceImg(x){
 	for (var i = 0; i < x.length; i++){
