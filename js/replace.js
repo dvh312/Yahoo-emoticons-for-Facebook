@@ -7,6 +7,7 @@ chrome.runtime.sendMessage({}, function(response) {
 		htmlChangedListener();
 	}
 });
+var sum = 0;
 function htmlChangedListener(){
 	//HTML changed eventListener
 	MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
@@ -17,12 +18,14 @@ function htmlChangedListener(){
 		mutations.forEach(function(mutation){
 			for (var i = 0; i < mutation.addedNodes.length; i++){
 				if (mutation.addedNodes[i].nodeType == 1){
-					replace(mutation.addedNodes[i].querySelectorAll('span,p,img,i'));
+					replace(mutation.addedNodes[i].querySelectorAll('span,p,img'));
 				}
 			}
 		});
 		var e = performance.now();
-		console.log("running... " + (e-s));
+		sum += e-s;
+		console.log("running... " + sum);
+
 	});
 
 	// define what element should be observed by the observer
@@ -36,6 +39,7 @@ function replace(x){
 	replaceImg(x);
 	replaceChatFBBig(x);
 	replaceText(x);
+	// replaceByTag(x);
 
 
 	//change key combination to emo
@@ -67,6 +71,9 @@ function replaceImg(x){
 }
 function replaceText(x){
 	for (var i = 0; i < x.length; i++){
+		if (x[i].hasAttribute("data-text")) continue; //attribute data-text show when typing,
+		if (x[i].classList.contains("alternate_name")) continue; //prevent change the alt name
+
 		if (x[i].tagName == "SPAN" || x[i].tagName == "P"){
 			if (x[i].textContent.length > 0){
 				if (x[i].childNodes.length > x[i].children.length){
@@ -82,8 +89,11 @@ function replaceText(x){
 								for (var k = keyComb.length - 1; k >= 0; k--){
 									if (keyComb[k] != ""){
 										var key = toRegex(keyComb[k], k);
-										//replace key combination with img element (if any);
-										newHTML = newHTML.replace(key, getCode(k));
+										//replace key combination with img element (if any)
+										if (newHTML.match(key)){ //tweak
+											newHTML = newHTML.replace(key, getCode(k));	
+										}
+										
 									}
 								}
 
@@ -132,79 +142,79 @@ function replaceText(x){
 	}
 }
 
-// function replaceByTag(x){
-// 	var nodesToBeRemoved = [];
-// 	for (var i = 0; i < x.length; i++){
-// 		if (x[i].hasAttribute("data-text")) continue; //attribute data-text show when typing,
-// 		if (x[i].classList.contains("alternate_name")) continue; //prevent change the alt name
+function replaceByTag(x){
+	var nodesToBeRemoved = [];
+	for (var i = 0; i < x.length; i++){
+		if (x[i].hasAttribute("data-text")) continue; //attribute data-text show when typing,
+		if (x[i].classList.contains("alternate_name")) continue; //prevent change the alt name
 
-// 		//remove if the element is a facebook emoticon
-// 		if (x[i].parentNode != null && x[i].parentNode.hasAttribute("title")){
-// 			if (x[i].parentNode.title.includes("emoticon")){
-// 				if (x[i].textContent.length == 0){
-// 					if (x[i].tagName == "SPAN" && x[i].className.includes("emoticon")){
-// 						nodesToBeRemoved[nodesToBeRemoved.length] = x[i];
-// 						continue;
-// 					} else if (x[i].tagName == "I"){
-// 						nodesToBeRemoved[nodesToBeRemoved.length] = x[i];
-// 						continue;
-// 					}
-// 				}
-// 			}
-// 		}
+		//remove if the element is a facebook emoticon
+		if (x[i].parentNode != null && x[i].parentNode.hasAttribute("title")){
+			if (x[i].parentNode.title.includes("emoticon")){
+				if (x[i].textContent.length == 0){
+					if (x[i].tagName == "SPAN" && x[i].className.includes("emoticon")){
+						nodesToBeRemoved[nodesToBeRemoved.length] = x[i];
+						continue;
+					} else if (x[i].tagName == "I"){
+						nodesToBeRemoved[nodesToBeRemoved.length] = x[i];
+						continue;
+					}
+				}
+			}
+		}
 
-// 		//just get text in this node, not in any child
-// 		var text = "";
-// 		for (var j = 0; j < x[i].childNodes.length; j++){
-// 			if (x[i].childNodes[j].nodeType == 3){
-// 				text += x[i].childNodes[j].textContent;
-// 			}
-// 		}
+		//just get text in this node, not in any child
+		var text = "";
+		for (var j = 0; j < x[i].childNodes.length; j++){
+			if (x[i].childNodes[j].nodeType == 3){
+				text += x[i].childNodes[j].textContent;
+			}
+		}
 
-// 		//check if have text and contain special char
-// 		if (text.length == 0) continue;
-// 		if (!containSpecialChar(text)) continue; //tweak,only run possible text
+		//check if have text and contain special char
+		if (text.length == 0) continue;
+		if (!containSpecialChar(text)) continue; //tweak,only run possible text
 
-// 		//search textContent inside the element for emoticon key combination
-// 		var processedHTML = preprocessHTML(x[i].innerHTML); //change > < and & back to normal
-// 		var changed = false;
-// 		for (var j = keyComb.length - 1; j >= 0; j--){
-// 			if (keyComb[j] != ""){
-// 				var key = toRegex(keyComb[j], j);
+		//search textContent inside the element for emoticon key combination
+		var processedHTML = preprocessHTML(x[i].innerHTML); //change > < and & back to normal
+		var changed = false;
+		for (var j = keyComb.length - 1; j >= 0; j--){
+			if (keyComb[j] != ""){
+				var key = toRegex(keyComb[j], j);
 
-// 				if (text.match(key)){ //only replace HTML in the node which have key in textContent
-// 					//replace key in innerHTML to img (if any)
-// 					processedHTML = processedHTML.replace(key, getCode(j));
+				if (text.match(key)){ //only replace HTML in the node which have key in textContent
+					//replace key in innerHTML to img (if any)
+					processedHTML = processedHTML.replace(key, getCode(j));
 
-// 					//remove in text after replaced in innerHTML (if any)
-// 					text = text.replace(key, "");
+					//remove in text after replaced in innerHTML (if any)
+					text = text.replace(key, "");
 
-// 					//mark as changed to save the result back to element
-// 					changed = true;
-// 				}
-// 			}
-// 		}
+					//mark as changed to save the result back to element
+					changed = true;
+				}
+			}
+		}
 
-// 		if (changed){ //only change if emoticon detected
-// 			if (x[i].tagName == "U"){
-// 				//cannot add img child node inside tag <u>, 
-// 				//so have replace the whole tag
-// 				x[i].outerHTML = processedHTML;
-// 			} else{
-// 				//for p, span, div tag can have img child node
-// 				x[i].innerHTML = processedHTML;
-// 			}
-// 		}
-// 	}
+		if (changed){ //only change if emoticon detected
+			if (x[i].tagName == "U"){
+				//cannot add img child node inside tag <u>, 
+				//so have replace the whole tag
+				x[i].outerHTML = processedHTML;
+			} else{
+				//for p, span, div tag can have img child node
+				x[i].innerHTML = processedHTML;
+			}
+		}
+	}
 
-// 	//remove nodes in array nodeTBRemove
-// 	for (var i = 0; i < nodesToBeRemoved.length; i++){
-// 		//just remove changed node
-// 		if (nodesToBeRemoved[i].nextSibling.textContent.length == 0){
-// 			nodesToBeRemoved[i].remove();
-// 		}
-// 	}
-// }
+	//remove nodes in array nodeTBRemove
+	for (var i = 0; i < nodesToBeRemoved.length; i++){
+		//just remove changed node
+		if (nodesToBeRemoved[i].nextSibling.textContent.length == 0){
+			nodesToBeRemoved[i].remove();
+		}
+	}
+}
 
 /**
  * replace BIG facebook emo in chatbox - leaf node with span tag
