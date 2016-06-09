@@ -69,7 +69,7 @@ function replaceText(x){
 		if (x[i].hasAttribute("data-text")) continue; //attribute data-text show when typing,
 		if (x[i].classList.contains("alternate_name")) continue; //prevent change the alt name
 
-		if (x[i].tagName == "SPAN" || x[i].tagName == "P" || x[i].tagName == "DIV" || x[i].tagName == "A"){
+		if (x[i].tagName == "SPAN" || x[i].tagName == "P" || x[i].tagName == "DIV"){
 			if (x[i].textContent.length > 0){
 				if (x[i].childNodes.length > x[i].children.length){
 					//BEGIN
