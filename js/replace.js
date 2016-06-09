@@ -17,7 +17,7 @@ function htmlChangedListener(){
 		mutations.forEach(function(mutation){
 			for (var i = 0; i < mutation.addedNodes.length; i++){
 				if (mutation.addedNodes[i].nodeType == 1){
-					replace(mutation.addedNodes[i].querySelectorAll('span,p,img'));
+					replace(mutation.addedNodes[i].querySelectorAll('span,p,img,div'));
 				}
 			}
 		});
@@ -69,7 +69,7 @@ function replaceText(x){
 		if (x[i].hasAttribute("data-text")) continue; //attribute data-text show when typing,
 		if (x[i].classList.contains("alternate_name")) continue; //prevent change the alt name
 
-		if (x[i].tagName == "SPAN" || x[i].tagName == "P"){
+		if (x[i].tagName == "SPAN" || x[i].tagName == "P" || x[i].tagName == "DIV" || x[i].tagName == "A"){
 			if (x[i].textContent.length > 0){
 				if (x[i].childNodes.length > x[i].children.length){
 					//BEGIN
@@ -79,21 +79,22 @@ function replaceText(x){
 							if (containSpecialChar(x[i].childNodes[j].textContent)) {
 								//initially, element have same content as text child node
 								var newHTML = x[i].childNodes[j].textContent;
-
+								var changed = false;
 								//search for matched yahoo key
 								for (var k = keyComb.length - 1; k >= 0; k--){
 									if (keyComb[k] != ""){
 										var key = toRegex(keyComb[k], k);
 										//replace key combination with img element (if any)
 										if (newHTML.match(key)){ //tweak
-											newHTML = newHTML.replace(key, getCode(k));	
+											newHTML = newHTML.replace(key, getCode(k));
+											changed = true;
 										}
 										
 									}
 								}
 
 								//replace text node by element node with updated yahoo emo
-								if (x[i].childNodes[j].textContent != newHTML){
+								if (changed){
 									//create new element, ready to replace the child node
 									var newElement = document.createElement("SPAN");
 									newElement.innerHTML = newHTML;
@@ -104,10 +105,10 @@ function replaceText(x){
 									if (x[i].parentNode != null && x[i].parentNode.tagName == "SPAN"){
 										if (x[i].parentNode.hasAttribute("title")){
 											if (x[i].parentNode.title.split(' ')[1] == "emoticon"){
-												if (x[i].previousSibling != null){
-													if (x[i].previousSibling.tagName == "SPAN"){
-														if (x[i].previousSibling.className.split(' ')[0] == "emoticon"){
-															x[i].parentNode.removeChild(x[i].previousSibling);
+												if (x[i].previousElementSibling != null){
+													if (x[i].previousElementSibling.tagName == "SPAN"){
+														if (x[i].previousElementSibling.className.split(' ')[0] == "emoticon"){
+															x[i].parentNode.removeChild(x[i].previousElementSibling);
 														}
 													}
 												}
@@ -119,9 +120,9 @@ function replaceText(x){
 									if (x[i].parentNode != null && x[i].parentNode.tagName == "I"){
 										if (x[i].parentNode.hasAttribute("title")){
 											if (x[i].parentNode.title.split(' ')[1] == "emoticon"){
-												if (x[i].previousSibling != null){
-													if (x[i].previousSibling.tagName == "I"){
-														x[i].parentNode.removeChild(x[i].previousSibling);
+												if (x[i].previousElementSibling != null){
+													if (x[i].previousElementSibling.tagName == "I"){
+														x[i].parentNode.removeChild(x[i].previousElementSibling);
 													}
 												}
 											}
