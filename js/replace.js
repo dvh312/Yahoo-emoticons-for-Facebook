@@ -2,8 +2,8 @@ var canRun = true; //check if the script is running
 
 chrome.runtime.sendMessage({}, function(response) {
 	if (response.isEnable) {
-		replace(document.body.getElementsByTagName("*"));
 		htmlChangedListener();
+		replace(getNeedElements(document.body)); //run once after loaded
 	}
 });
 // var sum = 0;
@@ -17,7 +17,7 @@ function htmlChangedListener(){
 		mutations.forEach(function(mutation){
 			for (var i = 0; i < mutation.addedNodes.length; i++){
 				if (mutation.addedNodes[i].nodeType == 1){
-					replace(mutation.addedNodes[i].querySelectorAll('span,p,img,div'));
+					replace(getNeedElements(mutation.addedNodes[i]));
 				}
 			}
 		});
@@ -33,6 +33,15 @@ function htmlChangedListener(){
 		subtree: true,
 		childList: true,
 	});
+}
+function getNeedElements(x){
+	var allElements = [];
+	allElements.push.apply(allElements, x.getElementsByTagName("SPAN"));
+	allElements.push.apply(allElements, x.getElementsByTagName("P"));
+	allElements.push.apply(allElements, x.getElementsByTagName("IMG"));
+	allElements.push.apply(allElements, x.getElementsByTagName("DIV"));
+	allElements.push.apply(allElements, x.getElementsByTagName("A"));
+	return allElements;
 }
 function replace(x){
 	replaceImg(x);
@@ -64,12 +73,41 @@ function replaceImg(x){
 		}
 	}
 }
+function replaceChatFBBig(x){
+	//process on parent span node contains title = keycomb, child img 
+	for (var i = 0; i < x.length; i++){
+		//check if person type the emo in with keycombine
+		if (x[i].tagName == "SPAN"){
+			if (x[i].hasAttribute("title")){
+				if (x[i].children.length == 1 && x[i].children[0].tagName == "IMG"){
+					//check if any yahoo emo match the title
+					for (var j = keyComb.length - 1; j >= 0; j--){
+						if (keyComb[j] != ""){
+							var key = toRegex(keyComb[j], j);
+
+							//check for exact match with the key combination
+							var matches = x[i].title.match(key);
+							if (matches != null){
+								if (matches[0] == x[i].title){
+									//change HTML code
+									x[i].innerHTML = getCode(j);
+									break;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
 function replaceText(x){
 	for (var i = 0; i < x.length; i++){
 		if (x[i].hasAttribute("data-text")) continue; //attribute data-text show when typing,
 		if (x[i].classList.contains("alternate_name")) continue; //prevent change the alt name
 
-		if (x[i].tagName == "SPAN" || x[i].tagName == "P" || x[i].tagName == "DIV"){
+		if (x[i].tagName == "SPAN" || x[i].tagName == "P" || x[i].tagName == "DIV" || x[i].tagName == "A"){
 			if (x[i].textContent.length > 0){
 				if (x[i].childNodes.length > x[i].children.length){
 					//BEGIN
@@ -104,10 +142,12 @@ function replaceText(x){
 									//remove fb emo in comments
 									if (x[i].parentNode != null && x[i].parentNode.tagName == "SPAN"){
 										if (x[i].parentNode.hasAttribute("title")){
-											if (x[i].parentNode.title.split(' ')[1] == "emoticon"){
+											var titles = x[i].parentNode.title.split(' ');
+											if (titles.length > 1 && titles[1] == "emoticon"){
 												if (x[i].previousElementSibling != null){
 													if (x[i].previousElementSibling.tagName == "SPAN"){
-														if (x[i].previousElementSibling.className.split(' ')[0] == "emoticon"){
+														var classes = x[i].previousElementSibling.className.split(' ');
+														if (classes.length > 0 && classes[0] == "emoticon"){
 															x[i].parentNode.removeChild(x[i].previousElementSibling);
 														}
 													}
@@ -119,7 +159,8 @@ function replaceText(x){
 									//remove fb emo in posts <p></p>
 									if (x[i].parentNode != null && x[i].parentNode.tagName == "I"){
 										if (x[i].parentNode.hasAttribute("title")){
-											if (x[i].parentNode.title.split(' ')[1] == "emoticon"){
+											var titles = x[i].parentNode.title.split(' ');
+											if (titles.length > 1 && titles[1] == "emoticon"){
 												if (x[i].previousElementSibling != null){
 													if (x[i].previousElementSibling.tagName == "I"){
 														x[i].parentNode.removeChild(x[i].previousElementSibling);
@@ -128,35 +169,6 @@ function replaceText(x){
 											}
 										}
 									}
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-}
-
-function replaceChatFBBig(x){
-	//process on parent span node contains title = keycomb, child img 
-	for (var i = 0; i < x.length; i++){
-		//check if person type the emo in with keycombine
-		if (x[i].tagName == "SPAN"){
-			if (x[i].hasAttribute("title")){
-				if (x[i].children.length == 1 && x[i].children[0].tagName == "IMG"){
-					//check if any yahoo emo match the title
-					for (var j = keyComb.length - 1; j >= 0; j--){
-						if (keyComb[j] != ""){
-							var key = toRegex(keyComb[j], j);
-
-							//check for exact match with the key combination
-							var matches = x[i].title.match(key);
-							if (matches != null){
-								if (matches[0] == x[i].title){
-									//change HTML code
-									x[i].innerHTML = getCode(j);
-									break;
 								}
 							}
 						}
@@ -241,19 +253,7 @@ function replaceChatFBBig(x){
 // 	}
 // }
 
-/**
- * change special char > < and & in innerHTML back
- * @param  {string} str element.innerHTML
- * @return {string}           processed string
- */
-function preprocessHTML(str){
-	//preprocess - replace special char in HTML
-	var res = str;
-	res = res.replace(/&lt;/g, "<");
-	res = res.replace(/&gt;/g, ">");
-	res = res.replace(/&amp;/g, "&");
-	return res;
-}
+
 /**
  * get the image code based on the keyComb array index
  * @param  {int} id the array index
