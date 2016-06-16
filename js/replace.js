@@ -1,30 +1,61 @@
-var canRun = true; //check if the script is running
+var queue = [];
+var timeout;
 
 chrome.runtime.sendMessage({}, function(response) {
 	if (response.isEnable) {
+		setTimeout(function(){
+			replace(getNeedElements(document.body)); //run once after document loaded
+		}, 2000);
 		htmlChangedListener();
-		replace(getNeedElements(document.body)); //run once after loaded
+		document.onwheel = function(e){
+			// console.log("scroll");
+			resetTimer();
+		}
+		document.onkeydown = function(e){
+			// console.log("key");
+			resetTimer();
+		}
+		document.onmousedown = function(e){
+			// console.log("mouse");
+			resetTimer();	
+		}
 	}
 });
+function resetTimer(){
+	clearTimeout(timeout);
+	timeout = setTimeout(doWork, 50);
+}
+
 // var sum = 0;
+function doWork(){
+	var s = performance.now();
+	while (queue.length > 0 && performance.now() - s < 1){
+		var mutation = queue.shift();
+		for (var i = 0; i < mutation.addedNodes.length; i++){
+			if (mutation.addedNodes[i].nodeType == 1){
+				replace(getNeedElements(mutation.addedNodes[i]));
+			}
+		}	
+	}
+	if (queue.length > 0) {
+		clearTimeout(timeout);
+		timeout = setTimeout(doWork, 50);
+	}
+
+	// var e = performance.now();
+	// sum += e-s;
+	// console.log("running... " + (e-s) + " (" + (sum) + ")" + queue.length);
+}
 function htmlChangedListener(){
 	//HTML changed eventListener
 	MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 
 	var observer = new MutationObserver(function(mutations, observer) {
 		// fired when a mutation occurs
-		// var s = performance.now();
 		mutations.forEach(function(mutation){
-			for (var i = 0; i < mutation.addedNodes.length; i++){
-				if (mutation.addedNodes[i].nodeType == 1){
-					replace(getNeedElements(mutation.addedNodes[i]));
-				}
-			}
+			queue.push(mutation);
+			resetTimer();
 		});
-		// var e = performance.now();
-		// sum += e-s;
-		// console.log("running... " + sum);
-
 	});
 
 	// define what element should be observed by the observer
@@ -47,7 +78,6 @@ function replace(x){
 	replaceImg(x);
 	replaceChatFBBig(x);
 	replaceText(x);
-	// replaceByTag(x);
 }
 function replaceImg(x){
 	for (var i = 0; i < x.length; i++){
