@@ -23,14 +23,14 @@ chrome.runtime.sendMessage({}, function(response) {
 });
 function resetTimer(){
 	clearTimeout(timeout);
-	timeout = setTimeout(doWork, 50);
+	timeout = setTimeout(doWork, 100);
 }
 
-// var sum = 0;
+var sum = 0;
 function doWork(){
 	var s = performance.now();
 	while (queue.length > 0 && performance.now() - s < 1){
-		var mutation = queue.shift();
+		var mutation = queue.pop();
 		for (var i = 0; i < mutation.addedNodes.length; i++){
 			if (mutation.addedNodes[i].nodeType == 1){
 				replace(getNeedElements(mutation.addedNodes[i]));
@@ -42,9 +42,9 @@ function doWork(){
 		timeout = setTimeout(doWork, 50);
 	}
 
-	// var e = performance.now();
-	// sum += e-s;
-	// console.log("running... " + (e-s) + " (" + (sum) + ")" + queue.length);
+	var e = performance.now();
+	sum += e-s;
+	console.log("running... " + (e-s) + " (" + (sum) + ")" + queue.length);
 }
 function htmlChangedListener(){
 	//HTML changed eventListener
