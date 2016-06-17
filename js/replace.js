@@ -1,5 +1,7 @@
+const idleTime = 100; //ms
+const breathTime = 10; //ms
 var queue = [];
-var timeout;
+var action = 0;
 
 chrome.runtime.sendMessage({}, function(response) {
 	if (response.isEnable) {
@@ -9,42 +11,42 @@ chrome.runtime.sendMessage({}, function(response) {
 		htmlChangedListener();
 		document.onwheel = function(e){
 			// console.log("scroll");
-			resetTimer();
+			resetTimer(idleTime);
 		}
 		document.onkeydown = function(e){
 			// console.log("key");
-			resetTimer();
+			resetTimer(idleTime);
 		}
 		document.onmousedown = function(e){
 			// console.log("mouse");
-			resetTimer();	
+			resetTimer(idleTime);	
 		}
 	}
 });
-function resetTimer(){
-	clearTimeout(timeout);
-	timeout = setTimeout(doWork, 100);
+
+function resetTimer(t){
+	action = (action + 1) % 100000;
+	var lastAction = action;
+	setTimeout(function(){
+		if (lastAction === action){
+			doWork();
+		}
+	}, t);
 }
 
-var sum = 0;
 function doWork(){
-	var s = performance.now();
-	while (queue.length > 0 && performance.now() - s < 1){
+	if (queue.length > 0){
 		var mutation = queue.pop();
 		for (var i = 0; i < mutation.addedNodes.length; i++){
-			if (mutation.addedNodes[i].nodeType == 1){
+			if (mutation.addedNodes[i].nodeType === 1){
 				replace(getNeedElements(mutation.addedNodes[i]));
 			}
 		}	
 	}
 	if (queue.length > 0) {
-		clearTimeout(timeout);
-		timeout = setTimeout(doWork, 50);
+		resetTimer(breathTime); //avoid freezing the browswer
 	}
-
-	var e = performance.now();
-	sum += e-s;
-	console.log("running... " + (e-s) + " (" + (sum) + ")" + queue.length);
+	// console.log(queue.length);
 }
 function htmlChangedListener(){
 	//HTML changed eventListener
@@ -52,10 +54,8 @@ function htmlChangedListener(){
 
 	var observer = new MutationObserver(function(mutations, observer) {
 		// fired when a mutation occurs
-		mutations.forEach(function(mutation){
-			queue.push(mutation);
-			resetTimer();
-		});
+		queue.push.apply(queue, mutations);
+		resetTimer(idleTime);
 	});
 
 	// define what element should be observed by the observer
@@ -81,17 +81,17 @@ function replace(x){
 }
 function replaceImg(x){
 	for (var i = 0; i < x.length; i++){
-		if (x[i].tagName == "IMG"){
+		if (x[i].tagName === "IMG"){
 			if (x[i].hasAttribute("title")){
 				//check if any yahoo emo match the title
 				for (var j = keyComb.length - 1; j >= 0; j--){
-					if (keyComb[j] != ""){
+					if (keyComb[j] !== ""){
 						var key = toRegex(keyComb[j], j);
 
 						//check for exact match with the key combination
 						var matches = x[i].title.match(key);
-						if (matches != null){
-							if (matches[0] == x[i].title){
+						if (matches !== null){
+							if (matches[0] === x[i].title){
 								//change HTML code
 								x[i].outerHTML = getCode(j);
 								break;
@@ -107,18 +107,18 @@ function replaceChatFBBig(x){
 	//process on parent span node contains title = keycomb, child img 
 	for (var i = 0; i < x.length; i++){
 		//check if person type the emo in with keycombine
-		if (x[i].tagName == "SPAN"){
+		if (x[i].tagName === "SPAN"){
 			if (x[i].hasAttribute("title")){
-				if (x[i].children.length == 1 && x[i].children[0].tagName == "IMG"){
+				if (x[i].children.length === 1 && x[i].children[0].tagName === "IMG"){
 					//check if any yahoo emo match the title
 					for (var j = keyComb.length - 1; j >= 0; j--){
-						if (keyComb[j] != ""){
+						if (keyComb[j] !== ""){
 							var key = toRegex(keyComb[j], j);
 
 							//check for exact match with the key combination
 							var matches = x[i].title.match(key);
-							if (matches != null){
-								if (matches[0] == x[i].title){
+							if (matches !== null){
+								if (matches[0] === x[i].title){
 									//change HTML code
 									x[i].innerHTML = getCode(j);
 									break;
@@ -137,20 +137,20 @@ function replaceText(x){
 		if (x[i].hasAttribute("data-text")) continue; //attribute data-text show when typing,
 		if (x[i].classList.contains("alternate_name")) continue; //prevent change the alt name
 
-		if (x[i].tagName == "SPAN" || x[i].tagName == "P" || x[i].tagName == "DIV" || x[i].tagName == "A"){
+		if (x[i].tagName === "SPAN" || x[i].tagName === "P" || x[i].tagName === "DIV" || x[i].tagName === "A"){
 			if (x[i].textContent.length > 0){
 				if (x[i].childNodes.length > x[i].children.length){
 					//BEGIN
 					for (var j = 0; j < x[i].childNodes.length; j++){
 						//only process text child nodes
-						if (x[i].childNodes[j].nodeType == 3 && x[i].childNodes[j].textContent.length > 0){
+						if (x[i].childNodes[j].nodeType === 3 && x[i].childNodes[j].textContent.length > 0){
 							if (containSpecialChar(x[i].childNodes[j].textContent)) {
 								//initially, element have same content as text child node
 								var newHTML = x[i].childNodes[j].textContent;
 								var changed = false;
 								//search for matched yahoo key
 								for (var k = keyComb.length - 1; k >= 0; k--){
-									if (keyComb[k] != ""){
+									if (keyComb[k] !== ""){
 										var key = toRegex(keyComb[k], k);
 										//replace key combination with img element (if any)
 										if (newHTML.match(key)){ //tweak
@@ -170,14 +170,14 @@ function replaceText(x){
 									x[i].replaceChild(newElement, x[i].childNodes[j]);
 
 									//remove fb emo in comments
-									if (x[i].parentNode != null && x[i].parentNode.tagName == "SPAN"){
+									if (x[i].parentNode !== null && x[i].parentNode.tagName === "SPAN"){
 										if (x[i].parentNode.hasAttribute("title")){
 											var titles = x[i].parentNode.title.split(' ');
-											if (titles.length > 1 && titles[1] == "emoticon"){
-												if (x[i].previousElementSibling != null){
-													if (x[i].previousElementSibling.tagName == "SPAN"){
+											if (titles.length > 1 && titles[1] === "emoticon"){
+												if (x[i].previousElementSibling !== null){
+													if (x[i].previousElementSibling.tagName === "SPAN"){
 														var classes = x[i].previousElementSibling.className.split(' ');
-														if (classes.length > 0 && classes[0] == "emoticon"){
+														if (classes.length > 0 && classes[0] === "emoticon"){
 															x[i].parentNode.removeChild(x[i].previousElementSibling);
 														}
 													}
@@ -187,12 +187,12 @@ function replaceText(x){
 									}
 
 									//remove fb emo in posts <p></p>
-									if (x[i].parentNode != null && x[i].parentNode.tagName == "I"){
+									if (x[i].parentNode !== null && x[i].parentNode.tagName === "I"){
 										if (x[i].parentNode.hasAttribute("title")){
 											var titles = x[i].parentNode.title.split(' ');
-											if (titles.length > 1 && titles[1] == "emoticon"){
-												if (x[i].previousElementSibling != null){
-													if (x[i].previousElementSibling.tagName == "I"){
+											if (titles.length > 1 && titles[1] === "emoticon"){
+												if (x[i].previousElementSibling !== null){
+													if (x[i].previousElementSibling.tagName === "I"){
 														x[i].parentNode.removeChild(x[i].previousElementSibling);
 													}
 												}
@@ -238,7 +238,7 @@ function toRegex(str, idx){
 	//only run MAIN for basic emoticons
 	var basic = false;
 	for (var i = 0; i < basicEmo.length; i++){
-		if (idx == basicEmo[i] - 1) {
+		if (idx === basicEmo[i] - 1) {
 			basic = true;
 			break;
 		}
@@ -255,7 +255,7 @@ function toRegex(str, idx){
 			//Ex: can show :-) if keycomb is :)
 			//
 			temp = temp.replace("\:", "\:-?");
-		} else if (idx == 2){ //show emo for ;-) <-> ;) 
+		} else if (idx === 2){ //show emo for ;-) <-> ;) 
 			temp = temp.replace(";", "\;-?");
 		}
 	}
@@ -269,9 +269,9 @@ function containSpecialChar(str){
 	}
 	return false;
 }
-var specialChar = ['!', '"', '#', '$', '%', '&', '\'', '(', ')', '*', '+', '-', '/', ';', '<', '=', '>', '?', '@', '\\', ']', '^', '_', '`', '|', '}', '~', '{', ':'];
-var basicEmo = [1,2,3,4,8,10,11,13,15,16,17,20,21,22,46];
-var keyComb = [
+const specialChar = ['!', '"', '#', '$', '%', '&', '\'', '(', ')', '*', '+', '-', '/', ';', '<', '=', '>', '?', '@', '\\', ']', '^', '_', '`', '|', '}', '~', '{', ':'];
+const basicEmo = [1,2,3,4,8,10,11,13,15,16,17,20,21,22,46];
+const keyComb = [
 	":)",
 	":(",
 	";)",
