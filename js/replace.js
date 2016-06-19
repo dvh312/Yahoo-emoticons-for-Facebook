@@ -3,6 +3,7 @@ const idleTime = 250; //ms
 const breathTime = 10; //ms
 var queue = [];
 var action = 0;
+var disableBuzz = new Set();
 
 chrome.runtime.sendMessage({}, function(response) {
 	if (response.isEnable) {
@@ -17,6 +18,11 @@ chrome.runtime.sendMessage({}, function(response) {
 		document.onkeydown = function(e){
 			if (debugging) console.log("key");
 			resetTimer(idleTime);
+
+			var evtobj = window.event? event : e;
+			if (evtobj.keyCode === 71 && evtobj.ctrlKey){
+				alert("Ctrl+g");
+			}
 		}
 		document.onmousedown = function(e){
 			if (debugging) console.log("mouse");
@@ -67,13 +73,6 @@ function htmlChangedListener(){
 		subtree: true,
 		childList: true,
 	});
-}
-
-document.onkeydown = function KeyPress(e) {
-	var evtobj = window.event? event : e
-	if (evtobj.keyCode == 71 && evtobj.ctrlKey){
-		alert("Ctrl+g");
-	}
 }
 
 function getNeedElements(x){
@@ -166,8 +165,11 @@ function replaceText(x){
 										if (newHTML.match(key)){ //tweak
 											newHTML = newHTML.replace(key, getCode(k));
 											changed = true;
-										}
-										
+
+											if (k === 137){ //if BUZZ detected
+												tryBuzz(x[i]);
+											}
+										}										
 									}
 								}
 
@@ -225,7 +227,7 @@ function replaceText(x){
  * @return {string}    the code to inject into HTML
  */
 function getCode(id){
-	if (id == 137){ //if BUZZ then go to different code
+	if (id === 137){ //if BUZZ then go to different code
 		return "<span style=\"color: red; font-weight: bold;\">BUZZ!!!</span>";
 	} else {
 		var s = "\"" + chrome.extension.getURL("images/YahooEmoticons/" + (id + 1) + ".gif") + "\"";
@@ -283,16 +285,46 @@ function containSpecialChar(str){
 	}
 	return false;
 }
+function tryBuzz(element){
+	var senderName = getSenderName(element);
+	if (senderName !== null){
+		if (!disableBuzz.has(senderName)){
+			disableBuzz.add(senderName);
+			setTimeout(function(){
+				disableBuzz.delete(senderName);
+			}, 5000);
 
+			//send request to show notification and play sound
+			chrome.runtime.sendMessage({
+				buzzActivated: true,
+				senderName: senderName
+			});
+			shakePopup(element);
+		}
+	}
+}
 function getSenderName(element){
-	if (element.tagName == "BODY") return "Someone ^_^";
+	if (element === null) {
+		return null;
+	}
 
-	if (element.className == "fbNubFlyoutOuter"){
+	if (element.className === "fbNubFlyoutOuter"){
+		//chat popup
 		return element.getElementsByClassName("fbNubFlyoutTitlebar")[0].textContent;
-	} else if (element.className == "content"){
-		return element.getElementsByClassName("author fixemoji")[0].children[0].textContent;
 	}
 	return getSenderName(element.parentNode);
+}
+
+function shakePopup(element){
+	if (element === null){
+		return;
+	}
+	if (element.className === "fbNubFlyoutOuter"){
+		$( element ).effect( "shake" );
+		return;
+	}
+	shakePopup(element.parentNode);
+	return;
 }
 
 const specialChar = ['!', '"', '#', '$', '%', '&', '\'', '(', ')', '*', '+', '-', '/', ';', '<', '=', '>', '?', '@', '\\', ']', '^', '_', '`', '|', '}', '~', '{', ':'];
