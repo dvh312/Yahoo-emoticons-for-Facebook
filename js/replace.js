@@ -1,4 +1,4 @@
-const debugging = true;
+const debugging = false;
 const idleTime = 250; //ms
 const breathTime = 10; //ms
 var queue = [];
