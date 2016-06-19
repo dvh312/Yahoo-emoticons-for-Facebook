@@ -1,5 +1,5 @@
 const debugging = true;
-const idleTime = 100; //ms
+const idleTime = 250; //ms
 const breathTime = 10; //ms
 var queue = [];
 var action = 0;
