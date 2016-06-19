@@ -1,3 +1,4 @@
+const debugging = true;
 const idleTime = 100; //ms
 const breathTime = 10; //ms
 var queue = [];
@@ -10,15 +11,15 @@ chrome.runtime.sendMessage({}, function(response) {
 		}, 2000);
 		htmlChangedListener();
 		document.onwheel = function(e){
-			// console.log("scroll");
+			if (debugging) console.log("scroll");
 			resetTimer(idleTime);
 		}
 		document.onkeydown = function(e){
-			// console.log("key");
+			if (debugging) console.log("key");
 			resetTimer(idleTime);
 		}
 		document.onmousedown = function(e){
-			// console.log("mouse");
+			if (debugging) console.log("mouse");
 			resetTimer(idleTime);	
 		}
 	}
@@ -46,7 +47,9 @@ function doWork(){
 	if (queue.length > 0) {
 		resetTimer(breathTime); //avoid freezing the browswer
 	}
-	// console.log(queue.length);
+
+
+	if (debugging) console.log(queue.length);
 }
 function htmlChangedListener(){
 	//HTML changed eventListener
