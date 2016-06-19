@@ -1,25 +1,64 @@
-var canRun = true; //check if the script is running
 const debugging = false;
+const idleTime = 250; //ms
+const breathTime = 10; //ms
+var queue = [];
+var action = 0;
 
 chrome.runtime.sendMessage({}, function(response) {
 	if (response.isEnable) {
-		replace(document.body.getElementsByTagName("*"));
+		setTimeout(function(){
+			replace(getNeedElements(document.body)); //run once after document loaded
+		}, 2000);
 		htmlChangedListener();
+		document.onwheel = function(e){
+			if (debugging) console.log("scroll");
+			resetTimer(idleTime);
+		}
+		document.onkeydown = function(e){
+			if (debugging) console.log("key");
+			resetTimer(idleTime);
+		}
+		document.onmousedown = function(e){
+			if (debugging) console.log("mouse");
+			resetTimer(idleTime);	
+		}
 	}
 });
+
+function resetTimer(t){
+	action = (action + 1) % 100000;
+	var lastAction = action;
+	setTimeout(function(){
+		if (lastAction === action){
+			doWork();
+		}
+	}, t);
+}
+
+function doWork(){
+	if (queue.length > 0){
+		var mutation = queue.pop();
+		for (var i = 0; i < mutation.addedNodes.length; i++){
+			if (mutation.addedNodes[i].nodeType === 1){
+				replace(getNeedElements(mutation.addedNodes[i]));
+			}
+		}	
+	}
+	if (queue.length > 0) {
+		resetTimer(breathTime); //avoid freezing the browswer
+	}
+
+
+	if (debugging) console.log(queue.length);
+}
 function htmlChangedListener(){
 	//HTML changed eventListener
 	MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 
 	var observer = new MutationObserver(function(mutations, observer) {
 		// fired when a mutation occurs
-		mutations.forEach(function(mutation){
-			for (var i = 0; i < mutation.addedNodes.length; i++){
-				if (mutation.addedNodes[i].nodeType == 1){
-					replace(mutation.addedNodes[i].getElementsByTagName("*"));
-				}
-			}
-		});
+		queue.push.apply(queue, mutations);
+		resetTimer(idleTime);
 	});
 
 	// define what element should be observed by the observer
@@ -37,129 +76,36 @@ document.onkeydown = function KeyPress(e) {
 	}
 }
 
+function getNeedElements(x){
+	var allElements = [];
+	allElements.push.apply(allElements, x.getElementsByTagName("SPAN"));
+	allElements.push.apply(allElements, x.getElementsByTagName("P"));
+	allElements.push.apply(allElements, x.getElementsByTagName("IMG"));
+	allElements.push.apply(allElements, x.getElementsByTagName("DIV"));
+	allElements.push.apply(allElements, x.getElementsByTagName("A"));
+	return allElements;
+}
+
 function replace(x){
-	//replace facebook emo FIRST - all in leaf node
-	replaceBigFBEmo(x);
-
-	//change key combination to emo
-	replaceByTag(x);
+	replaceImg(x);
+	replaceChatFBBig(x);
+	replaceText(x);
 }
-/**
- * replace the HTML element with image code
- * @param  {array} x elements array
- */
-function replaceByTag(x){
-	var nodesToBeRemoved = [];
+function replaceImg(x){
 	for (var i = 0; i < x.length; i++){
-		if (x[i].hasAttribute("data-text")) continue; //attribute data-text show when typing,
-		if (x[i].classList.contains("alternate_name")) continue; //prevent change the alt name
-
-		//remove if the element is a facebook emoticon
-		if (x[i].parentNode != null){
-			if (x[i].parentNode.hasAttribute("title")){
-				if (x[i].parentNode.title.includes("emoticon")){
-					if (x[i].textContent.length == 0){
-						if (x[i].tagName == "SPAN" && x[i].className.includes("emoticon")){
-							nodesToBeRemoved[nodesToBeRemoved.length] = x[i];
-							continue;
-						} else if (x[i].tagName == "I"){
-							nodesToBeRemoved[nodesToBeRemoved.length] = x[i];
-							continue;
-						}
-					}
-				}
-			}
-		}
-
-		//just get text in this node, not in any child
-		var text = "";
-		for (var j = 0; j < x[i].childNodes.length; j++){
-			if (x[i].childNodes[j].nodeType == 3){
-				text += x[i].childNodes[j].textContent;
-			}
-		}
-
-		//check if have text and contain special char
-		if (text.length == 0) continue;
-		if (!containSpecialChar(text)) continue; //tweak,only run possible text
-
-		//search textContent inside the element for emoticon key combination
-		var processedHTML = preprocessHTML(x[i].innerHTML); //change > < and & back to normal
-		var changed = false;
-		for (var j = keyComb.length - 1; j >= 0; j--){
-			if (keyComb[j].length > 0){
-				var key = toRegex(keyComb[j], j);
-
-				if (text.match(key)){ //only replace HTML in the node which have key in textContent
-					//replace key in innerHTML to img (if any)
-					processedHTML = processedHTML.replace(key, getCode(j));
-
-					//remove in text after replaced in innerHTML (if any)
-					text = text.replace(key, "");
-
-					if (j == 137){ //if BUZZ detected
-						//send request to show notification and play sound
-						chrome.runtime.sendMessage({
-							buzzActivated: true,
-							senderName: getSenderName(x[i])
-						});
-						$( ".fbNubFlyoutOuter" ).effect( "shake" );
-					}
-
-					//mark as changed to save the result back to element
-					changed = true;
-				}
-			}
-		}
-
-		//only change if emoticon detected
-		if (changed){
-			if (x[i].tagName == "U"){
-				//cannot add img child node inside tag <u>, 
-				//so have replace the whole tag
-				x[i].outerHTML = processedHTML;
-			} else{
-				//for p, span, div tag can have img child node
-				x[i].innerHTML = processedHTML;
-			}
-		}
-	}
-
-	//remove nodes in array nodeTBRemove
-	for (var i = 0; i < nodesToBeRemoved.length; i++){
-		//just remove changed node
-		if (nodesToBeRemoved[i].nextSibling.textContent.length == 0){
-			nodesToBeRemoved[i].remove();
-		}
-	}
-}
-
-/**
- * replace BIG facebook emo in chatbox - leaf node with span tag
- * @param  {array} x elements
- */
-function replaceBigFBEmo(x){
-	for (var i = 0; i < x.length; i++){
-		if (x[i].hasAttribute("title") || (x[i].parentNode != null && x[i].parentNode.hasAttribute("title"))){
-			var node;
-			if (x[i].hasAttribute("title")) {
-				node = x[i];
-			} else {
-				node = x[i].parentNode;
-			}
-
-			if (node.hasAttribute("title")){
+		if (x[i].tagName === "IMG"){
+			if (x[i].hasAttribute("title")){
+				//check if any yahoo emo match the title
 				for (var j = keyComb.length - 1; j >= 0; j--){
-					if (keyComb[j].length > 0){
+					if (keyComb[j] !== ""){
 						var key = toRegex(keyComb[j], j);
-						var match = node.title.match(key);
-						if (match != null){
-							if (match[0] == node.title){
-								if (node.parentNode == null){
-									node.innerHTML = getCode(j);
-								} else {
-									node.outerHTML = getCode(j);
-								}
+
+						//check for exact match with the key combination
+						var matches = x[i].title.match(key);
+						if (matches !== null){
+							if (matches[0] === x[i].title){
+								//change HTML code
+								x[i].outerHTML = getCode(j);
 								break;
 							}
 						}
@@ -169,19 +115,110 @@ function replaceBigFBEmo(x){
 		}
 	}
 }
-/**
- * change special char > < and & in innerHTML back
- * @param  {string} str element.innerHTML
- * @return {string}           processed string
- */
-function preprocessHTML(str){
-	//preprocess - replace special char in HTML
-	var res = str;
-	res = res.replace(/&lt;/g, "<");
-	res = res.replace(/&gt;/g, ">");
-	res = res.replace(/&amp;/g, "&");
-	return res;
+function replaceChatFBBig(x){
+	//process on parent span node contains title = keycomb, child img 
+	for (var i = 0; i < x.length; i++){
+		//check if person type the emo in with keycombine
+		if (x[i].tagName === "SPAN"){
+			if (x[i].hasAttribute("title")){
+				if (x[i].children.length === 1 && x[i].children[0].tagName === "IMG"){
+					//check if any yahoo emo match the title
+					for (var j = keyComb.length - 1; j >= 0; j--){
+						if (keyComb[j] !== ""){
+							var key = toRegex(keyComb[j], j);
+							//check for exact match with the key combination
+							var matches = x[i].title.match(key);
+							if (matches !== null){
+								if (matches[0] === x[i].title){
+									//change HTML code
+									x[i].innerHTML = getCode(j);
+									break;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
 }
+
+function replaceText(x){
+	for (var i = 0; i < x.length; i++){
+		if (x[i].hasAttribute("data-text")) continue; //attribute data-text show when typing,
+		if (x[i].classList.contains("alternate_name")) continue; //prevent change the alt name
+		if (x[i].tagName === "SPAN" || x[i].tagName === "P" || x[i].tagName === "DIV" || x[i].tagName === "A"){
+			if (x[i].textContent.length > 0){
+				if (x[i].childNodes.length > x[i].children.length){
+					//BEGIN
+					for (var j = 0; j < x[i].childNodes.length; j++){
+						//only process text child nodes
+						if (x[i].childNodes[j].nodeType === 3 && x[i].childNodes[j].textContent.length > 0){
+							if (containSpecialChar(x[i].childNodes[j].textContent)) {
+								//initially, element have same content as text child node
+								var newHTML = x[i].childNodes[j].textContent;
+								var changed = false;
+								//search for matched yahoo key
+								for (var k = keyComb.length - 1; k >= 0; k--){
+									if (keyComb[k] !== ""){
+										var key = toRegex(keyComb[k], k);
+										//replace key combination with img element (if any)
+										if (newHTML.match(key)){ //tweak
+											newHTML = newHTML.replace(key, getCode(k));
+											changed = true;
+										}
+										
+									}
+								}
+
+								//replace text node by element node with updated yahoo emo
+								if (changed){
+									//create new element, ready to replace the child node
+									var newElement = document.createElement("SPAN");
+									newElement.innerHTML = newHTML;
+
+									x[i].replaceChild(newElement, x[i].childNodes[j]);
+
+									//remove fb emo in comments
+									if (x[i].parentNode !== null && x[i].parentNode.tagName === "SPAN"){
+										if (x[i].parentNode.hasAttribute("title")){
+											var titles = x[i].parentNode.title.split(' ');
+											if (titles.length > 1 && titles[1] === "emoticon"){
+												if (x[i].previousElementSibling !== null){
+													if (x[i].previousElementSibling.tagName === "SPAN"){
+														var classes = x[i].previousElementSibling.className.split(' ');
+														if (classes.length > 0 && classes[0] === "emoticon"){
+															x[i].parentNode.removeChild(x[i].previousElementSibling);
+														}
+													}
+												}
+											}
+										}
+									}
+
+									//remove fb emo in posts <p></p>
+									if (x[i].parentNode !== null && x[i].parentNode.tagName === "I"){
+										if (x[i].parentNode.hasAttribute("title")){
+											var titles = x[i].parentNode.title.split(' ');
+											if (titles.length > 1 && titles[1] === "emoticon"){
+												if (x[i].previousElementSibling !== null){
+													if (x[i].previousElementSibling.tagName === "I"){
+														x[i].parentNode.removeChild(x[i].previousElementSibling);
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
 /**
  * get the image code based on the keyComb array index
  * @param  {int} id the array index
@@ -215,7 +252,7 @@ function toRegex(str, idx){
 	//only run MAIN for basic emoticons
 	var basic = false;
 	for (var i = 0; i < basicEmo.length; i++){
-		if (idx == basicEmo[i] - 1) {
+		if (idx === basicEmo[i] - 1) {
 			basic = true;
 			break;
 		}
@@ -232,7 +269,7 @@ function toRegex(str, idx){
 			//Ex: can show :-) if keycomb is :)
 			//
 			temp = temp.replace("\:", "\:-?");
-		} else if (idx == 2){ //show emo for ;-) <-> ;) 
+		} else if (idx === 2){ //show emo for ;-) <-> ;) 
 			temp = temp.replace(";", "\;-?");
 		}
 	}
@@ -246,6 +283,7 @@ function containSpecialChar(str){
 	}
 	return false;
 }
+
 function getSenderName(element){
 	if (element.tagName == "BODY") return "Someone ^_^";
 
@@ -257,9 +295,9 @@ function getSenderName(element){
 	return getSenderName(element.parentNode);
 }
 
-var specialChar = ['!', '"', '#', '$', '%', '&', '\'', '(', ')', '*', '+', ',', '-', '.', '/', ';', '<', '=', '>', '?', '@', '\\', ']', '^', '_', '`', '|', '}', '~', '{', ':'];
-var basicEmo = [1,2,3,4,8,10,11,13,15,16,17,20,21,22,46];
-var keyComb = [
+const specialChar = ['!', '"', '#', '$', '%', '&', '\'', '(', ')', '*', '+', '-', '/', ';', '<', '=', '>', '?', '@', '\\', ']', '^', '_', '`', '|', '}', '~', '{', ':'];
+const basicEmo = [1,2,3,4,8,10,11,13,15,16,17,20,21,22,46];
+const keyComb = [
 	":)",
 	":(",
 	";)",
