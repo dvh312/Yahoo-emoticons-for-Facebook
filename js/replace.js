@@ -1,8 +1,9 @@
-const debugging = false;
-const idleTime = 250; //ms
-const breathTime = 10; //ms
-var queue = [];
-var action = 0;
+const debugging = false; //turn print debug on or off
+const idleTime = 250; //idle delay in ms
+const breathTime = 10; //delay between each process ms
+const MOD = 100000; //wrap around after action count reach 100000
+var queue = []; //main queue to save works
+var action = 0; //number of action % MOD
 
 chrome.runtime.sendMessage({}, function(response) {
 	if (response.isEnable) {
@@ -26,7 +27,7 @@ chrome.runtime.sendMessage({}, function(response) {
 });
 
 function resetTimer(t){
-	action = (action + 1) % 100000;
+	action = (action + 1) % MOD;
 	var lastAction = action;
 	setTimeout(function(){
 		if (lastAction === action){
