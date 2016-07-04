@@ -5,13 +5,16 @@ const MOD = 100000; //wrap around after action count reach 100000
 var queue = []; //main queue to save works
 var action = 0; //number of action % MOD
 
+//check if the extension is enable or disable
 chrome.runtime.sendMessage({}, function(response) {
 	if (response.isEnable) {
 		setTimeout(function(){
+			//first replacement after pageload 2s
 			replace(getNeedElements(document.body)); //run once after document loaded
 		}, 2000);
-		htmlChangedListener();
-		document.onwheel = function(e){
+		htmlChangedListener(); //add listener for HTML changed
+		//event call when these actions happen
+		document.onwheel = function(e){ 
 			if (debugging) console.log("scroll");
 			resetTimer(idleTime);
 		}
@@ -25,7 +28,11 @@ chrome.runtime.sendMessage({}, function(response) {
 		}
 	}
 });
-
+/**
+ * after t ms, if no action happens, do work in queue
+ * @param  {int} t idleTime
+ * @return {void}   n/a
+ */
 function resetTimer(t){
 	action = (action + 1) % MOD;
 	var lastAction = action;
@@ -35,7 +42,10 @@ function resetTimer(t){
 		}
 	}, t);
 }
-
+/**
+ * do one work in the queue
+ * @return {void} n/a
+ */
 function doWork(){
 	if (queue.length > 0){
 		var mutation = queue.pop();
@@ -52,6 +62,10 @@ function doWork(){
 
 	if (debugging) console.log(queue.length);
 }
+/**
+ * applied html listener, add changes to the queue
+ * @return {void} n/a
+ */
 function htmlChangedListener(){
 	//HTML changed eventListener
 	MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
@@ -69,6 +83,11 @@ function htmlChangedListener(){
 		childList: true,
 	});
 }
+/**
+ * get elements with needed tag in the changed html
+ * @param  {element} x htmlElement
+ * @return {array}   all focused elements
+ */
 function getNeedElements(x){
 	var allElements = [];
 	allElements.push.apply(allElements, x.getElementsByTagName("SPAN"));
@@ -78,11 +97,21 @@ function getNeedElements(x){
 	allElements.push.apply(allElements, x.getElementsByTagName("A"));
 	return allElements;
 }
+/**
+ * replace
+ * @param  {elements array} x focused elements
+ * @return {void}   N/A
+ */
 function replace(x){
 	replaceImg(x);
 	replaceChatFBBig(x);
 	replaceText(x);
 }
+/**
+ * replace facebook emoticon show in an img tag with title = keyCombination (ex: :-D)
+ * @param  {elements array} x focused elements
+ * @return {void}   N/A
+ */
 function replaceImg(x){
 	for (var i = 0; i < x.length; i++){
 		if (x[i].tagName === "IMG"){
@@ -107,6 +136,11 @@ function replaceImg(x){
 		}
 	}
 }
+/**
+ * replace standalone facebook emoticon in the message pop-up
+ * @param  {elements array} x focused elements
+ * @return {void}   N/A
+ */
 function replaceChatFBBig(x){
 	//process on parent span node contains title = keycomb, child img 
 	for (var i = 0; i < x.length; i++){
@@ -135,7 +169,11 @@ function replaceChatFBBig(x){
 		}
 	}
 }
-
+/**
+ * replace keyCombination show as text to an img element
+ * @param  {elements array} x focused elements
+ * @return {void}   N/A
+ */
 function replaceText(x){
 	for (var i = 0; i < x.length; i++){
 		if (x[i].hasAttribute("data-text")) continue; //attribute data-text show when typing,
@@ -223,6 +261,11 @@ function getCode(id){
 	var res = "<img src=" + s + ">";
 	return res;
 }
+/**
+ * include special char in the string
+ * @param  {string} str unprocessed string
+ * @return {string}     processed string
+ */
 function preg_quote( str ) {
     // http://kevin.vanzonneveld.net
     // +   original by: booeyOH
@@ -238,6 +281,12 @@ function preg_quote( str ) {
 
     return (str+'').replace(/([\\\.\+\*\?\[\^\]\$\(\)\{\}\=\!\<\>\|\:])/g, "\\$1");
 }
+/**
+ * change key combination to regex
+ * @param  {string} str keyCombination
+ * @param  {int} idx index of the keyCombination
+ * @return {RegExp}     Regular Expression object, no case sensitive, get all matches
+ */
 function toRegex(str, idx){
 	//only run MAIN for basic emoticons
 	var basic = false;
@@ -265,6 +314,11 @@ function toRegex(str, idx){
 	}
 	return ( new RegExp( "(" + temp + ")" , 'gi' ) );
 }
+/**
+ * check if a string  contain any special character (for optimization)
+ * @param  {string} str to-be-checked string
+ * @return {boolean}     indicate contain or not
+ */
 function containSpecialChar(str){
 	for (var i = 0; i < specialChar.length; i++){
 		if (str.includes(specialChar[i])){
@@ -273,6 +327,7 @@ function containSpecialChar(str){
 	}
 	return false;
 }
+
 const specialChar = ['!', '"', '#', '$', '%', '&', '\'', '(', ')', '*', '+', '-', '/', ';', '<', '=', '>', '?', '@', '\\', ']', '^', '_', '`', '|', '}', '~', '{', ':'];
 const basicEmo = [1,2,3,4,8,10,11,13,15,16,17,20,21,22,46];
 const keyComb = [
