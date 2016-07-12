@@ -25,7 +25,7 @@ chrome.browserAction.onClicked.addListener(function(tab) {
     chrome.storage.sync.set({
         'isEnabled': !isEnabled
     }, function(){
-        debug("enable status toggled: " + isEnabled);
+        debug("saved. isEnabled=" + isEnabled);
     });
 });
 
@@ -35,11 +35,14 @@ chrome.browserAction.onClicked.addListener(function(tab) {
  * @return {void}         N/A
  */
 chrome.storage.onChanged.addListener(function(changes){
+
     if (changes.isEnabled !== undefined){
         isEnabled = changes.isEnabled.newValue;
+        debug("updated isEnabled local var");
     }
     if(changes.emoticons !== undefined){
         emoticons = changes.emoticons.newValue;
+        debug("updated emoticons local var");
     }
     refresh();
 });
@@ -53,7 +56,7 @@ function refresh(){
     sendStorageRequest();
 }
 function iconToggle(){
-    debug("toggling icon");
+    debug("checking icon");
     //toggle icon
     if (isEnabled){
         chrome.browserAction.setIcon({
@@ -70,12 +73,20 @@ function sendStorageRequest(){
     //send refresh storage request
     chrome.tabs.query({url: ["https://www.facebook.com/*","https://www.messenger.com/*"]}, function(tabs){
         for (var i = 0; i < tabs.length; i++){
-            chrome.tabs.sendMessage(tabs[i].id, {type: "refresh"}, function(response) {});
+            chrome.tabs.sendMessage(tabs[i].id, {type: "refresh"}, function(response) {
+                if (response === undefined){
+                    debug("request fail to receive");
+                } else if (response.type === "ok"){
+                    debug("request sent");
+                } else {
+                    debug("request fail to receive");
+                }
+            });
         }
     });
 }
 function reloadTabs(){
-    debug("loading tabs");
+    debug("reloading tabs");
 	chrome.tabs.query({url: ["https://www.facebook.com/*","https://www.messenger.com/*"]}, function(tabs){
 		for (var i = 0; i < tabs.length; i++){
 			chrome.tabs.reload(tabs[i].id);
@@ -84,6 +95,6 @@ function reloadTabs(){
 }
 function debug(str){
     if (debugging) {
-        console.log(str + " (background.js)");
+        console.log(str);
     }
 }
