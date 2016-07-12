@@ -23,7 +23,7 @@ var emoticons = [{
     "src": "images/YahooEmoticons/6.gif"
 }, {
     "fbImgFilename": "1f615.png",
-    "keys": [":-/", ":/"],
+    "keys": [":-/"],
     "src": "images/YahooEmoticons/7.gif"
 }, {
     "keys": [":x", ":X", ":-x", ":-X"],

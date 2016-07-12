@@ -1,4 +1,6 @@
 const debugging = false; //turn print debug on or off
+const idleTime = 250; //ms
+var timerId;
 var isEnabled, emoticons; //storageVariable
 
 var queue = []; //main queue to save works
@@ -17,11 +19,17 @@ function main(){
 		}, 2000);
 		htmlChangedListener(); //add listener for HTML changed
 		//event call when these actions happen
-		setInterval(doWork, 5000);
+		document.onwheel = function(e){
+			debug("scroll");
+			resetTimer(idleTime);
+		}
 		document.onkeydown = function(e){
 			if (e.keyCode === 13){
 				debug("enter pressed");
 				doWork();	
+			} else {
+				debug("key pressed");
+				resetTimer(idleTime);
 			}
 		}
 		document.onmousedown = function(e){
@@ -29,6 +37,12 @@ function main(){
 			doWork();
 		}
 	}
+}
+function resetTimer(t){
+	clearTimeout(timerId);
+	timerId = setTimeout(function(){
+		doWork();
+	}, t);
 }
 /**
  * do one work in the queue
@@ -44,7 +58,7 @@ function doWork(){
 			if (mutation.addedNodes[i].nodeType === 1){
 				replace(getNeedElements(mutation.addedNodes[i]));
 			}
-		}	
+		}
 	}
 	if (debugging){
 		var t1 = performance.now();
@@ -61,12 +75,10 @@ function htmlChangedListener(){
 
 	var observer = new MutationObserver(function(mutations, observer) {
 		// fired when a mutation occurs
-		debug("HTMLchanged");
+		
 		queue.push.apply(queue, mutations);
-		if (queue.length > 50) {
-			debug("overLengh");
-			doWork();
-		}
+		resetTimer(idleTime);
+		// debug("HTMLchanged " + queue.length);
 	});
 
 	// define what element should be observed by the observer
@@ -147,21 +159,15 @@ function replaceText(x){
 						//only process text child nodes
 						if (x[i].childNodes[j].nodeType === 3 && x[i].childNodes[j].textContent.length > 0){
 							//initially, element have same content as text child node
-							var newHTML = "";
-							var tokens = x[i].childNodes[j].textContent.split(' ');
+							var newHTML = x[i].childNodes[j].textContent;
 							var changed = false;
 							//search for matched yahoo key
-							for (var p = 0; p < tokens.length; p++){
-								for (var q = emoticons.length - 1; q >= 0; q--){
-									if (emoticons[q].keys.indexOf(tokens[p]) > -1){
-										tokens[p] = "<img src=\"" + chrome.extension.getURL(emoticons[q].src) + "\">";
+							for (var k = emoticons.length - 1; k >= 0; k--){
+								for (var w = 0; w < emoticons[k].keys.length; w++){
+									while (newHTML.includes(emoticons[k].keys[w])){
+										newHTML = newHTML.replace(emoticons[k].keys[w], "<img src=\"" + chrome.extension.getURL(emoticons[k].src) + "\">");
 										changed = true;
-										break;
 									}
-								}
-								newHTML += tokens[p];
-								if (p < tokens.length - 1) {
-									newHTML += " ";
 								}
 							}
 							
