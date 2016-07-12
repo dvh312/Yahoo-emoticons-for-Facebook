@@ -1,5 +1,5 @@
 const debugging = false;
-chrome.storage.sync.clear();
+chrome.storage.sync.clear(); //always set to default
 //add all storageVariables to storage if it hasn't been done
 chrome.storage.sync.get(function(items){
     if (items.isEnabled === undefined || items.emoticons === undefined){
