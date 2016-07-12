@@ -1,5 +1,5 @@
 const debugging = true;
-
+chrome.storage.sync.clear();
 //add all storageVariables to storage if it hasn't been done
 chrome.storage.sync.get(function(items){
     if (items.isEnabled === undefined || items.emoticons === undefined){
@@ -42,13 +42,13 @@ chrome.storage.onChanged.addListener(function(changes){
         isEnabled = changes.isEnabled.newValue;
         debug("isEnabled updated");
 
-        reloadTabs();
         refreshIcon();
     }
     if(changes.emoticons !== undefined){
         emoticons = changes.emoticons.newValue;
         debug("emoticons upadted");
     }
+    reloadTabs();
 });
 
 function refreshIcon(){

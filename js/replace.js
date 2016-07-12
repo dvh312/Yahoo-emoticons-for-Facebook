@@ -9,6 +9,8 @@ setTimeout(main, 1000);
 function main(){
 	if (isEnabled){
 		debug("entering main");
+
+
 	}
 }
 
@@ -20,11 +22,13 @@ function refreshStorage(){
 	chrome.storage.sync.get(function (items){
 	    isEnabled = items.isEnabled;
 	    emoticons = items.emoticons;
-
-	    debug("Refreshed");
-	    debug(isEnabled);
-	    debug(emoticons);
+	    debug("Refreshed. isEnabled=" + isEnabled);
 	});
+}
+
+function getFilename(fullPath){
+	var filename = fullPath.replace(/^.*[\\\/]/, '');
+	return filename;
 }
 
 function debug(str){
