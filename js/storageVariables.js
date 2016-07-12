@@ -1,5 +1,5 @@
 var isEnabled = true; //initial the isEnable value
-var emoticons =  [{
+var emoticons = [{
     "fbImgFilename": "1f642.png",
     "keys": [":)", ":-)"],
     "src": "images/YahooEmoticons/1.gif"

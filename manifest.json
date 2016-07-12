@@ -3,7 +3,7 @@
 
   "name": "Facebook Emoticons",
   "description": "Change Facebook text into emoticons",
-  "version": "1.7.14",
+  "version": "1.7.15",
 
   "background": {
     "scripts": ["js/storageVariables.js", "js/background.js"]
