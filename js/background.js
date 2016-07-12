@@ -1,5 +1,4 @@
 const debugging = true;
-reloadTabs();
 
 //add all storageVariables to storage if it hasn't been done
 chrome.storage.sync.get(function(items){
@@ -17,8 +16,12 @@ chrome.storage.sync.get(function(items){
         debug("Get old storage.");
     }
 
-    refresh();
+    reloadTabs();
+    refreshIcon();
 });
+
+
+//FUNCTION + EVENTS
 
 //Toggle button - Enable/Disable the extension
 chrome.browserAction.onClicked.addListener(function(tab) {
@@ -35,28 +38,21 @@ chrome.browserAction.onClicked.addListener(function(tab) {
  * @return {void}         N/A
  */
 chrome.storage.onChanged.addListener(function(changes){
-
     if (changes.isEnabled !== undefined){
         isEnabled = changes.isEnabled.newValue;
-        debug("updated isEnabled local var");
+        debug("isEnabled updated");
+
+        reloadTabs();
+        refreshIcon();
     }
     if(changes.emoticons !== undefined){
         emoticons = changes.emoticons.newValue;
-        debug("updated emoticons local var");
+        debug("emoticons upadted");
     }
-    refresh();
 });
 
-/**
- * refresh icon, send update request to content script
- * @return {void} n/a
- */
-function refresh(){
-    iconToggle();
-    sendStorageRequest();
-}
-function iconToggle(){
-    debug("checking icon");
+function refreshIcon(){
+    
     //toggle icon
     if (isEnabled){
         chrome.browserAction.setIcon({
@@ -67,24 +63,9 @@ function iconToggle(){
             path: "./images/iconblack.png"
         });
     }
+    debug("refreshed icon");
 }
-function sendStorageRequest(){
-    debug("sending storage request");
-    //send refresh storage request
-    chrome.tabs.query({url: ["https://www.facebook.com/*","https://www.messenger.com/*"]}, function(tabs){
-        for (var i = 0; i < tabs.length; i++){
-            chrome.tabs.sendMessage(tabs[i].id, {type: "refresh"}, function(response) {
-                if (response === undefined){
-                    debug("request fail to receive");
-                } else if (response.type === "ok"){
-                    debug("request sent");
-                } else {
-                    debug("request fail to receive");
-                }
-            });
-        }
-    });
-}
+
 function reloadTabs(){
     debug("reloading tabs");
 	chrome.tabs.query({url: ["https://www.facebook.com/*","https://www.messenger.com/*"]}, function(tabs){
@@ -93,6 +74,7 @@ function reloadTabs(){
 		}
 	});
 }
+
 function debug(str){
     if (debugging) {
         console.log(str);

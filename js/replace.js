@@ -4,6 +4,8 @@ var isEnabled, emoticons; //storageVariable
 refreshStorage();
 setTimeout(main, 1000);
 
+//FUNCTION + EVENTS
+
 function main(){
 	if (isEnabled){
 		debug("entering main");
@@ -24,15 +26,6 @@ function refreshStorage(){
 	    debug(emoticons);
 	});
 }
-
-chrome.runtime.onMessage.addListener( function(request, sender, sendResponse) {
-    if (request.type === "refresh"){
-    	refreshStorage();
-		setTimeout(main, 1000);
-		sendResponse({type: "ok"});
-    }
-});
-
 
 function debug(str){
 	if (debugging) {
