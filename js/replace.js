@@ -121,8 +121,10 @@ function replaceImg(x){
 		if (x[i].tagName === "IMG"){
 			var idx = srcToIndex(x[i].src);
 			if (idx !== null){
-				x[i].src = chrome.extension.getURL(emoticons[idx].src);
-				x[i].style = "width: auto;";
+				if (!x[i].parentNode.hasAttribute("aria-label")){
+					x[i].src = chrome.extension.getURL(emoticons[idx].src);
+					x[i].style = "width: auto;";
+				}
 			}
 		}
 	}
