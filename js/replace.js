@@ -123,7 +123,12 @@ function replaceImg(x){
 			if (idx !== null){
 				if (!x[i].parentNode.hasAttribute("aria-label")){
 					x[i].src = chrome.extension.getURL(emoticons[idx].src);
-					x[i].style = "height: auto; width: auto;";
+					x[i].style = "width: auto;";
+
+					//big emoticon (do not come with chat text), do not zoom
+					if (x[i].alt === ""){
+						x[i].style = "width: auto; height: auto;";	
+					}
 				}
 			}
 		}
