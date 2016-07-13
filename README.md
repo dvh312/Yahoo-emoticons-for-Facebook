@@ -5,6 +5,9 @@ Download link: http://goo.gl/mHKx4O
 
 Show Yahoo Emoticons for Facebook and Messenger.
 
+Version 1.7.18
+- Do not zoom replaced big emoticons
+
 Version 1.7.17
 - Fix bug in emoji table
 
