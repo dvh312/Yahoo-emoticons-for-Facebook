@@ -177,9 +177,9 @@ function replaceText(x){
 							if (changed){
 								//create new element, ready to replace the child node
 								var newElement = document.createElement("SPAN");
-								// newElement.outerHTML = newHTML;
-
 								x[i].replaceChild(newElement, x[i].childNodes[j]);
+
+								//replace temp span element with newHTML (text and img nodes)
 								x[i].childNodes[j].outerHTML = newHTML;
 
 								removeInComments(x[i]);
