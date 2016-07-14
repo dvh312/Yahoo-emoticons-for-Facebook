@@ -202,10 +202,10 @@ function replaceText(element){
  * @return {boolean}         return if the element is in good condition or not
  */
 function valid(element){
-	if (!element.hasAttribute("data-text")){ //attribute data-text show when typing,
-		if (!element.classList.contains("alternate_name")){ //prevent change the alt name
-			if (element.textContent.length > 0){ //have text in subtree
-				if (element.childNodes.length > element.children.length){ //contains text, comment nodes
+	if (element.textContent.length > 0){ //have text in subtree
+		if (element.childNodes.length > element.children.length){ //contains text, comment nodes
+			if (!element.hasAttribute("data-text")){ //attribute data-text show when typing,
+				if (!element.classList.contains("alternate_name")){ //prevent change the alt name
 					return true;
 				}
 			}
