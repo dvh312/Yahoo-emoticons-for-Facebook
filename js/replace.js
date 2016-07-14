@@ -123,12 +123,7 @@ function replaceImg(x){
 			if (idx !== null){
 				if (!x[i].parentNode.hasAttribute("aria-label")){
 					x[i].src = chrome.extension.getURL(emoticons[idx].src);
-					x[i].style = "width: auto;";
-
-					//big emoticon (do not come with chat text), do not zoom
-					if (x[i].alt === ""){
-						x[i].style = "width: auto; height: auto;";	
-					}
+					x[i].style = "height: auto; width: auto;";
 				}
 			}
 		}
@@ -172,7 +167,7 @@ function replaceText(x){
 							for (var k = emoticons.length - 1; k >= 0; k--){
 								for (var w = 0; w < emoticons[k].keys.length; w++){
 									while (newHTML.includes(emoticons[k].keys[w])){
-										newHTML = newHTML.replace(emoticons[k].keys[w], "<img src=\"" + chrome.extension.getURL(emoticons[k].src) + "\">");
+										newHTML = newHTML.replace(emoticons[k].keys[w], "<img src=\"" + chrome.extension.getURL(emoticons[k].src) + "\" style=\"vertical-align: middle;\">");
 										changed = true;
 									}
 								}
@@ -182,9 +177,10 @@ function replaceText(x){
 							if (changed){
 								//create new element, ready to replace the child node
 								var newElement = document.createElement("SPAN");
-								newElement.innerHTML = newHTML;
+								// newElement.outerHTML = newHTML;
 
 								x[i].replaceChild(newElement, x[i].childNodes[j]);
+								x[i].childNodes[j].outerHTML = newHTML;
 
 								removeInComments(x[i]);
 								removeInPosts(x[i]);
