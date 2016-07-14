@@ -176,15 +176,17 @@ function replaceText(element){
 				
 				//replace text node by element node with updated yahoo emo
 				if (changed){
-					//create new element, ready to replace the child node
-					var newElement = document.createElement("SPAN");
-					element.replaceChild(newElement, element.childNodes[j]);
+					//fix bug duplicate when replacing old emoticons in posts and comments
+					if (isOldEmoInPostsComments(element)){
+						element.parentNode.innerHTML = newHTML;
+					} else {
+						//create new element, ready to replace the child node
+						var newElement = document.createElement("SPAN");
+						element.replaceChild(newElement, element.childNodes[j]);
 
-					//replace temp span element with newHTML (text and img nodes)
-					element.childNodes[j].outerHTML = newHTML;
-
-					removeInComments(element);
-					removeInPosts(element);
+						//replace temp span element with newHTML (text and img nodes)
+						element.childNodes[j].outerHTML = newHTML;	
+					}
 				}
 			}
 		}
@@ -211,39 +213,18 @@ function valid(element){
 	}
 	return false;
 }
-function removeInComments(x){
-	//remove fb emo in comments
-	if (x.parentNode !== null && x.parentNode.tagName === "SPAN"){
-		if (x.parentNode.hasAttribute("title")){
-			var titles = x.parentNode.title.split(' ');
+function isOldEmoInPostsComments(element){
+	if (element.parentNode !== null){
+		if (element.parentNode.hasAttribute("title")){
+			var titles = element.parentNode.title.split(' ');
 			if (titles.length > 1 && titles[1] === "emoticon"){
-				if (x.previousElementSibling !== null){
-					if (x.previousElementSibling.tagName === "SPAN"){
-						var classes = x.previousElementSibling.className.split(' ');
-						if (classes.length > 0 && classes[0] === "emoticon"){
-							x.parentNode.removeChild(x.previousElementSibling);
-						}
-					}
-				}
+				return true;
 			}
 		}
 	}
+	return false;
 }
-function removeInPosts(x){
-	//remove fb emo in posts <p></p>
-	if (x.parentNode !== null && x.parentNode.tagName === "I"){
-		if (x.parentNode.hasAttribute("title")){
-			var titles = x.parentNode.title.split(' ');
-			if (titles.length > 1 && titles[1] === "emoticon"){
-				if (x.previousElementSibling !== null){
-					if (x.previousElementSibling.tagName === "I"){
-						x.parentNode.removeChild(x.previousElementSibling);
-					}
-				}
-			}
-		}
-	}
-}
+
 /**
  * refresh storage variables (local in content script)
  * @return {[type]} [description]
