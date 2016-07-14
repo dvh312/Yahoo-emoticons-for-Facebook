@@ -108,28 +108,36 @@ function getNeedElements(x){
  * @return {void}   N/A
  */
 function replace(x){
-	replaceImg(x);
-	replaceText(x);
+	for (var i = 0; i < x.length; i++){
+		if (x[i].tagName === "IMG") {
+			replaceImg(x[i]);
+		} else {
+			replaceText(x[i]);
+		}
+	}
 }
 /**
  * replace facebook emoticon show in an img tag with title = keyCombination (ex: :-D)
- * @param  {elements array} x focused elements
+ * @param  {DOMelement} x focused element
  * @return {void}   N/A
  */
-function replaceImg(x){
-	for (var i = 0; i < x.length; i++){
-		if (x[i].tagName === "IMG"){
-			var idx = srcToIndex(x[i].src);
-			if (idx !== null){
-				if (!x[i].parentNode.hasAttribute("aria-label")){
-					x[i].src = chrome.extension.getURL(emoticons[idx].src);
-					x[i].style = "height: auto; width: auto;";
-				}
+function replaceImg(element){
+	if (element.tagName === "IMG"){
+		var idx = srcToIndex(element.src);
+		if (idx !== null){
+			if (!element.parentNode.hasAttribute("aria-label")){
+				element.src = chrome.extension.getURL(emoticons[idx].src);
+				element.style = "height: auto; width: auto;";
 			}
 		}
 	}
 }
-
+/**
+ * given the original source of the image, check if the filename in that source
+ * matchs with any emoticon fbImgFilename in the dictionary
+ * @param  {string} src the source of the image
+ * @return {int}     index of the emoticons in the dict, otherwise return null
+ */
 function srcToIndex(src){
 	var filename = getFilename(src);
 
@@ -145,52 +153,63 @@ function srcToIndex(src){
 }
 /**
  * replace keyCombination show as text to an img element
- * @param  {elements array} x focused elements
+ * @param  {DOMelement} x focused element
  * @return {void}   N/A
  */
-function replaceText(x){
-	for (var i = 0; i < x.length; i++){
-		if (x[i].hasAttribute("data-text")) continue; //attribute data-text show when typing,
-		if (x[i].classList.contains("alternate_name")) continue; //prevent change the alt name
-
-		if (x[i].tagName === "SPAN" || x[i].tagName === "P" || x[i].tagName === "DIV" || x[i].tagName === "A"){
-			if (x[i].textContent.length > 0){
-				if (x[i].childNodes.length > x[i].children.length){
-					//BEGIN
-					for (var j = 0; j < x[i].childNodes.length; j++){
-						//only process text child nodes
-						if (x[i].childNodes[j].nodeType === 3 && x[i].childNodes[j].textContent.length > 0){
-							//initially, element have same content as text child node
-							var newHTML = x[i].childNodes[j].textContent;
-							var changed = false;
-							//search for matched yahoo key
-							for (var k = emoticons.length - 1; k >= 0; k--){
-								for (var w = 0; w < emoticons[k].keys.length; w++){
-									while (newHTML.includes(emoticons[k].keys[w])){
-										newHTML = newHTML.replace(emoticons[k].keys[w], "<img src=\"" + chrome.extension.getURL(emoticons[k].src) + "\" style=\"vertical-align: middle;\">");
-										changed = true;
-									}
-								}
-							}
-							
-							//replace text node by element node with updated yahoo emo
-							if (changed){
-								//create new element, ready to replace the child node
-								var newElement = document.createElement("SPAN");
-								x[i].replaceChild(newElement, x[i].childNodes[j]);
-
-								//replace temp span element with newHTML (text and img nodes)
-								x[i].childNodes[j].outerHTML = newHTML;
-
-								removeInComments(x[i]);
-								removeInPosts(x[i]);
-							}
+function replaceText(element){
+	if (valid(element)){
+		for (var j = 0; j < element.childNodes.length; j++){
+			//only process text child nodes
+			if (element.childNodes[j].nodeType === 3 && element.childNodes[j].textContent.length > 0){
+				//initially, element have same content as text child node
+				var newHTML = element.childNodes[j].textContent;
+				var changed = false;
+				//search for matched yahoo key
+				for (var k = emoticons.length - 1; k >= 0; k--){
+					for (var w = 0; w < emoticons[k].keys.length; w++){
+						while (newHTML.includes(emoticons[k].keys[w])){
+							newHTML = newHTML.replace(emoticons[k].keys[w], "<img src=\"" + chrome.extension.getURL(emoticons[k].src) + "\" style=\"vertical-align: middle;\">");
+							changed = true;
 						}
 					}
+				}
+				
+				//replace text node by element node with updated yahoo emo
+				if (changed){
+					//create new element, ready to replace the child node
+					var newElement = document.createElement("SPAN");
+					element.replaceChild(newElement, element.childNodes[j]);
+
+					//replace temp span element with newHTML (text and img nodes)
+					element.childNodes[j].outerHTML = newHTML;
+
+					removeInComments(element);
+					removeInPosts(element);
 				}
 			}
 		}
 	}
+}
+/**
+ * check if the element is valid by some condition:
+ * do not change while typing
+ * do not change facebook alternate name
+ * skip if element do not contain text
+ * skip if there aren't any textNode in childNodes
+ * @param  {DOMelement} element processing element
+ * @return {boolean}         return if the element is in good condition or not
+ */
+function valid(element){
+	if (!element.hasAttribute("data-text")){ //attribute data-text show when typing,
+		if (!element.classList.contains("alternate_name")){ //prevent change the alt name
+			if (element.textContent.length > 0){ //have text in subtree
+				if (element.childNodes.length > element.children.length){ //contains text, comment nodes
+					return true;
+				}
+			}
+		}
+	}
+	return false;
 }
 function removeInComments(x){
 	//remove fb emo in comments
