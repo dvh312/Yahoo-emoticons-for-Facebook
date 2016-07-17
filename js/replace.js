@@ -1,4 +1,4 @@
-const debugging = false; //turn print debug on or off
+const debugging = true; //turn print debug on or off
 const idleTime = 250; //ms
 var timerId;
 var isEnabled, emoticons; //storageVariable
@@ -167,8 +167,8 @@ function replaceText(element){
 				//search for matched yahoo key
 				for (var k = emoticons.length - 1; k >= 0; k--){
 					for (var w = 0; w < emoticons[k].keys.length; w++){
-						while (newHTML.includes(emoticons[k].keys[w])){
-							newHTML = newHTML.replace(emoticons[k].keys[w], getImgHtml(emoticons[k].src));
+						if (newHTML.includes(emoticons[k].keys[w])){
+							newHTML = replaceAllInstances(newHTML, emoticons[k].keys[w], getImgHtml(emoticons[k].src));
 							changed = true;
 						}
 					}
@@ -224,8 +224,13 @@ function isOldEmoInPostsComments(element){
 	}
 	return false;
 }
+
 function getImgHtml(src){
 	return "<img src=\"" + chrome.extension.getURL(src) + "\" style=\"vertical-align: middle;\">";
+}
+
+function replaceAllInstances(str, origin, token){
+	return str.split(origin).join(token);
 }
 
 /**
