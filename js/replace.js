@@ -1,23 +1,36 @@
-const debugging = true; //turn print debug on or off
-const idleTime = 100; //ms
+const debugging = false; //turn print debug on or off
+const idleTime = 250; //ms
 var timerId;
 var isEnabled, emoticons; //storageVariable
-
 var queue = []; //main queue to save works
-refreshStorage();
-setTimeout(main, 1000);
+
+(function(){
+	refreshStorage();
+})();
 
 //FUNCTION + EVENTS
+
+/**
+ * refresh storage variables (local in content script)
+ * @return {[type]} [description]
+ */
+function refreshStorage(){
+	chrome.storage.sync.get(function (items){
+	    isEnabled = items.isEnabled;
+	    emoticons = items.emoticons;
+	    debug("Refreshed. isEnabled=" + isEnabled);
+
+	    main();
+	});
+}
 
 function main(){
 	if (isEnabled){
 		debug("entering main");
 
-		setTimeout(function(){
-			//first replacement after pageload 2s
-			replace(getNeedElements(document.body)); //run once after document loaded
-		}, 2000);
+		replace(getNeedElements(document.body)); //run once after document loaded
 		htmlChangedListener(); //add listener for HTML changed
+
 		//event call when these actions happen
 		document.onwheel = function(e){
 			debug("scroll");
@@ -225,17 +238,7 @@ function replaceAllInstances(str, origin, token){
 	return str.split(origin).join(token);
 }
 
-/**
- * refresh storage variables (local in content script)
- * @return {[type]} [description]
- */
-function refreshStorage(){
-	chrome.storage.sync.get(function (items){
-	    isEnabled = items.isEnabled;
-	    emoticons = items.emoticons;
-	    debug("Refreshed. isEnabled=" + isEnabled);
-	});
-}
+
 
 function getFilename(fullPath){
 	var filename = fullPath.replace(/^.*[\\\/]/, '');
