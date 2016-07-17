@@ -168,7 +168,7 @@ function replaceText(element){
 				for (var k = emoticons.length - 1; k >= 0; k--){
 					for (var w = 0; w < emoticons[k].keys.length; w++){
 						while (newHTML.includes(emoticons[k].keys[w])){
-							newHTML = newHTML.replace(emoticons[k].keys[w], "<img src=\"" + chrome.extension.getURL(emoticons[k].src) + "\" style=\"vertical-align: middle;\">");
+							newHTML = newHTML.replace(emoticons[k].keys[w], getImgHtml(emoticons[k].src));
 							changed = true;
 						}
 					}
@@ -223,6 +223,9 @@ function isOldEmoInPostsComments(element){
 		}
 	}
 	return false;
+}
+function getImgHtml(src){
+	return "<img src=\"" + chrome.extension.getURL(src) + "\" style=\"vertical-align: middle;\">";
 }
 
 /**
