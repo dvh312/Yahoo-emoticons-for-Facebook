@@ -1,5 +1,5 @@
-const debugging = false; //turn print debug on or off
-const idleTime = 250; //ms
+const debugging = true; //turn print debug on or off
+const idleTime = 100; //ms
 var timerId;
 var isEnabled, emoticons; //storageVariable
 
@@ -49,20 +49,12 @@ function resetTimer(t){
  * @return {void} n/a
  */
 function doWork(){
-	if (debugging){
-		var t0 = performance.now();
-	}
-	while (queue.length > 0){
-		var mutation = queue.pop();
-		for (var i = 0; i < mutation.addedNodes.length; i++){
-			if (mutation.addedNodes[i].nodeType === 1){
-				replace(getNeedElements(mutation.addedNodes[i]));
-			}
+	if (queue.length > 0){
+		var addedNode = queue.pop();
+		if (addedNode.nodeType === 1){
+			replace(getNeedElements(addedNode));
 		}
-	}
-	if (debugging){
-		var t1 = performance.now();
-		debug("doWork took " + (t1 - t0) + " milliseconds.");
+		resetTimer(0); //avoid freezing the browser
 	}
 }
 /**
@@ -75,10 +67,10 @@ function htmlChangedListener(){
 
 	var observer = new MutationObserver(function(mutations, observer) {
 		// fired when a mutation occurs
-		
-		queue.push.apply(queue, mutations);
+		mutations.forEach(function(mutation){
+			queue.push.apply(queue, mutation.addedNodes);
+		});
 		resetTimer(idleTime);
-		// debug("HTMLchanged " + queue.length);
 	});
 
 	// define what element should be observed by the observer
