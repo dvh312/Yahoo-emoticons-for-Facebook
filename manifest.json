@@ -6,7 +6,7 @@
   "version": "1.7.19",
 
   "background": {
-    "scripts": ["js/storageVariables.js", "js/background.js"]
+    "scripts": ["js/background.js"]
   },
 
   "browser_action": {

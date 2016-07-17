@@ -1,4 +1,4 @@
-const debugging = true; //turn print debug on or off
+const debugging = false; //turn print debug on or off
 const idleTime = 250; //ms
 var timerId;
 var isEnabled, emoticons; //storageVariable
