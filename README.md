@@ -5,6 +5,9 @@ Download link: http://goo.gl/mHKx4O
 
 Show Yahoo Emoticons for Facebook and Messenger.
 
+Version 1.7.20
+- Fix some minor bugs that cause not showing emo properly
+
 Version 1.7.19
 - Fix emoticons vertical align
 
