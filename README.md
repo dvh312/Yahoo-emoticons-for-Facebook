@@ -5,6 +5,9 @@ Download link: http://goo.gl/mHKx4O
 
 Show Yahoo Emoticons for Facebook and Messenger.
 
+Version 1.7.22
+- Fix bug that do not run script after restarted Chrome
+
 Version 1.7.21
 - Avoid freezing the browser when running
 

@@ -1,26 +1,32 @@
 const debugging = false;
 var isEnabled = true; //initial the isEnable value
 
-chrome.storage.sync.clear(); //always set to default
-//add all storageVariables to storage if it hasn't been done
-chrome.storage.sync.get(function(items){
-    if (items.isEnabled === undefined || items.emoticons === undefined){
-        chrome.storage.sync.clear();
-        chrome.storage.sync.set({
-            'isEnabled': isEnabled,
-            'emoticons': emoticons
-        }, function(){
-            debug("Set new storage.");
-        });
-    } else {
-        isEnabled = items.isEnabled;
-        emoticons = items.emoticons;
-        debug("Get old storage.");
-    }
+chrome.storage.sync.clear(function(){
+    //always set to default, remove this if add user config
+    debug("storage cleared");
 
-    reloadTabs();
-    refreshIcon();
+    chrome.storage.sync.get(function(items){
+        //add all storageVariables to storage if it hasn't been done
+        if (items.isEnabled === undefined || items.emoticons === undefined){
+            chrome.storage.sync.set({
+                'isEnabled': isEnabled,
+                'emoticons': emoticons
+            }, function(){
+                debug("Set new storage.");
+            });
+        } else {
+            isEnabled = items.isEnabled;
+            emoticons = items.emoticons;
+            debug("Get old storage.");
+
+            reloadTabs();
+            refreshIcon();
+        }
+    });
 });
+
+
+
 
 
 //FUNCTION + EVENTS
