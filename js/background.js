@@ -13,8 +13,12 @@ chrome.storage.sync.clear(function(){
                 'emoticons': emoticons
             }, function(){
                 debug("Set new storage.");
+
+                reloadTabs();
+                refreshIcon();
             });
         } else {
+            //this code will never run
             isEnabled = items.isEnabled;
             emoticons = items.emoticons;
             debug("Get old storage.");
@@ -33,34 +37,19 @@ chrome.storage.sync.clear(function(){
 
 //Toggle button - Enable/Disable the extension
 chrome.browserAction.onClicked.addListener(function(tab) {
+    isEnabled = !isEnabled;
     chrome.storage.sync.set({
-        'isEnabled': !isEnabled
+        'isEnabled': isEnabled
     }, function(){
         debug("saved. isEnabled=" + isEnabled);
+
+        reloadTabs();
+        refreshIcon();
     });
 });
 
-/** 
- * run after the storage updated
- * @param  {object} changes changed item (ex: changes.isEnabled)
- * @return {void}         N/A
- */
-chrome.storage.onChanged.addListener(function(changes){
-    if (changes.isEnabled !== undefined){
-        isEnabled = changes.isEnabled.newValue;
-        debug("isEnabled updated");
-
-        refreshIcon();
-    }
-    if(changes.emoticons !== undefined){
-        emoticons = changes.emoticons.newValue;
-        debug("emoticons upadted");
-    }
-    reloadTabs();
-});
 
 function refreshIcon(){
-    
     //toggle icon
     if (isEnabled){
         chrome.browserAction.setIcon({
