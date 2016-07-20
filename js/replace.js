@@ -1,69 +1,91 @@
-const debugging = false;
+const debugging = false; //turn print debug on or off
 const idleTime = 250; //ms
-const breathTime = 10; //ms
-var queue = [];
-var action = 0;
-var disableBuzz = new Set();
+var timerId;
+var isEnabled, emoticons; //storageVariable
+var queue = []; //main queue to save works
 
-chrome.runtime.sendMessage({}, function(response) {
-	if (response.isEnable) {
-		setTimeout(function(){
-			replace(getNeedElements(document.body)); //run once after document loaded
-		}, 2000);
-		htmlChangedListener();
+(function(){
+	refreshStorage();
+})();
+
+//FUNCTION + EVENTS
+
+/**
+ * refresh storage variables (local in content script)
+ * @return {[type]} [description]
+ */
+function refreshStorage(){
+	chrome.storage.sync.get(function (items){
+	    isEnabled = items.isEnabled;
+	    emoticons = items.emoticons;
+	    debug("Refreshed. isEnabled=" + isEnabled);
+
+	    main();
+	});
+}
+
+function main(){
+	if (isEnabled){
+		debug("entering main");
+
+		replace(getNeedElements(document.body)); //run once after document loaded
+		htmlChangedListener(); //add listener for HTML changed
+
+		//event call when these actions happen
 		document.onwheel = function(e){
-			if (debugging) console.log("scroll");
+			debug("scroll");
 			resetTimer(idleTime);
 		}
 		document.onkeydown = function(e){
-			if (debugging) console.log("key");
-			resetTimer(idleTime);
-
-			var evtobj = window.event? event : e;
-			if (evtobj.keyCode === 71 && evtobj.ctrlKey){
-				alert("Ctrl+g");
+			if (e.keyCode === 13){
+				debug("enter pressed");
+				doWork();	
+			} else {
+				debug("key pressed");
+				resetTimer(idleTime);
 			}
 		}
 		document.onmousedown = function(e){
-			if (debugging) console.log("mouse");
-			resetTimer(idleTime);	
-		}
-	}
-});
-
-function resetTimer(t){
-	action = (action + 1) % 100000;
-	var lastAction = action;
-	setTimeout(function(){
-		if (lastAction === action){
+			debug("clicked");
 			doWork();
 		}
+	}
+}
+
+function resetTimer(t){
+	clearTimeout(timerId);
+	timerId = setTimeout(function(){
+		doWork();
 	}, t);
 }
 
+/**
+ * do one work in the queue
+ * @return {void} n/a
+ */
 function doWork(){
 	if (queue.length > 0){
-		var mutation = queue.pop();
-		for (var i = 0; i < mutation.addedNodes.length; i++){
-			if (mutation.addedNodes[i].nodeType === 1){
-				replace(getNeedElements(mutation.addedNodes[i]));
-			}
-		}	
+		var addedNode = queue.pop();
+		if (addedNode.nodeType === 1){
+			replace(getNeedElements(addedNode));
+		}
+		resetTimer(0); //avoid freezing the browser
 	}
-	if (queue.length > 0) {
-		resetTimer(breathTime); //avoid freezing the browswer
-	}
-
-
-	if (debugging) console.log(queue.length);
 }
+
+/**
+ * applied html listener, add changes to the queue
+ * @return {void} n/a
+ */
 function htmlChangedListener(){
 	//HTML changed eventListener
 	MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 
 	var observer = new MutationObserver(function(mutations, observer) {
 		// fired when a mutation occurs
-		queue.push.apply(queue, mutations);
+		mutations.forEach(function(mutation){
+			queue.push.apply(queue, mutation.addedNodes);
+		});
 		resetTimer(idleTime);
 	});
 
@@ -75,6 +97,11 @@ function htmlChangedListener(){
 	});
 }
 
+/**
+ * get elements with needed tag in the changed html
+ * @param  {element} x htmlElement
+ * @return {array}   all focused elements
+ */
 function getNeedElements(x){
 	var allElements = [];
 	allElements.push.apply(allElements, x.getElementsByTagName("SPAN"));
@@ -85,135 +112,95 @@ function getNeedElements(x){
 	return allElements;
 }
 
+/**
+ * replace
+ * @param  {elements array} x focused elements
+ * @return {void}   N/A
+ */
 function replace(x){
-	replaceImg(x);
-	replaceChatFBBig(x);
-	replaceText(x);
-}
-function replaceImg(x){
 	for (var i = 0; i < x.length; i++){
-		if (x[i].tagName === "IMG"){
-			if (x[i].hasAttribute("title")){
-				//check if any yahoo emo match the title
-				for (var j = keyComb.length - 1; j >= 0; j--){
-					if (keyComb[j] !== ""){
-						var key = toRegex(keyComb[j], j);
-
-						//check for exact match with the key combination
-						var matches = x[i].title.match(key);
-						if (matches !== null){
-							if (matches[0] === x[i].title){
-								//change HTML code
-								x[i].outerHTML = getCode(j);
-								break;
-							}
-						}
-					}
-				}
-			}
+		if (x[i].tagName === "IMG") {
+			replaceImg(x[i]);
+		} else {
+			replaceText(x[i]);
 		}
 	}
 }
-function replaceChatFBBig(x){
-	//process on parent span node contains title = keycomb, child img 
-	for (var i = 0; i < x.length; i++){
-		//check if person type the emo in with keycombine
-		if (x[i].tagName === "SPAN"){
-			if (x[i].hasAttribute("title")){
-				if (x[i].children.length === 1 && x[i].children[0].tagName === "IMG"){
-					//check if any yahoo emo match the title
-					for (var j = keyComb.length - 1; j >= 0; j--){
-						if (keyComb[j] !== ""){
-							var key = toRegex(keyComb[j], j);
-							//check for exact match with the key combination
-							var matches = x[i].title.match(key);
-							if (matches !== null){
-								if (matches[0] === x[i].title){
-									//change HTML code
-									x[i].innerHTML = getCode(j);
-									break;
-								}
-							}
-						}
-					}
-				}
+
+/**
+ * replace facebook emoticon show in an img tag with title = keyCombination (ex: :-D)
+ * @param  {DOMelement} x focused element
+ * @return {void}   N/A
+ */
+function replaceImg(element){
+	if (element.tagName === "IMG"){
+		var idx = srcToIndex(element.src);
+		if (idx !== null){
+			if (!element.parentNode.hasAttribute("aria-label")){
+				element.src = chrome.extension.getURL(emoticons[idx].src);
+				element.style = "height: auto; width: auto;";
 			}
 		}
 	}
 }
 
-function replaceText(x){
-	for (var i = 0; i < x.length; i++){
-		if (x[i].hasAttribute("data-text")) continue; //attribute data-text show when typing,
-		if (x[i].classList.contains("alternate_name")) continue; //prevent change the alt name
-		if (x[i].tagName === "SPAN" || x[i].tagName === "P" || x[i].tagName === "DIV" || x[i].tagName === "A"){
-			if (x[i].textContent.length > 0){
-				if (x[i].childNodes.length > x[i].children.length){
-					//BEGIN
-					for (var j = 0; j < x[i].childNodes.length; j++){
-						//only process text child nodes
-						if (x[i].childNodes[j].nodeType === 3 && x[i].childNodes[j].textContent.length > 0){
-							if (containSpecialChar(x[i].childNodes[j].textContent)) {
-								//initially, element have same content as text child node
-								var newHTML = x[i].childNodes[j].textContent;
-								var changed = false;
-								//search for matched yahoo key
-								for (var k = keyComb.length - 1; k >= 0; k--){
-									if (keyComb[k] !== ""){
-										var key = toRegex(keyComb[k], k);
-										//replace key combination with img element (if any)
-										if (newHTML.match(key)){ //tweak
-											newHTML = newHTML.replace(key, getCode(k));
-											changed = true;
+/**
+ * given the original source of the image, check if the filename in that source
+ * matchs with any emoticon fbImgFilename in the dictionary
+ * @param  {string} src the source of the image
+ * @return {int}     index of the emoticons in the dict, otherwise return null
+ */
+function srcToIndex(src){
+	var filename = getFilename(src);
 
-											if (k === 137){ //if BUZZ detected
-												tryBuzz(x[i]);
-											}
-										}										
-									}
-								}
+	//only the first 25 emo may be replaced by facebook img
+	for (var i = 0; i < 25; i++){
+		if (emoticons[i].fbImgFilename !== undefined){
+			if (emoticons[i].fbImgFilename === filename){
+				return i;
+			}
+		}
+	}
+	return null;
+}
 
-								//replace text node by element node with updated yahoo emo
-								if (changed){
-									//create new element, ready to replace the child node
-									var newElement = document.createElement("SPAN");
-									newElement.innerHTML = newHTML;
-
-									x[i].replaceChild(newElement, x[i].childNodes[j]);
-
-									//remove fb emo in comments
-									if (x[i].parentNode !== null && x[i].parentNode.tagName === "SPAN"){
-										if (x[i].parentNode.hasAttribute("title")){
-											var titles = x[i].parentNode.title.split(' ');
-											if (titles.length > 1 && titles[1] === "emoticon"){
-												if (x[i].previousElementSibling !== null){
-													if (x[i].previousElementSibling.tagName === "SPAN"){
-														var classes = x[i].previousElementSibling.className.split(' ');
-														if (classes.length > 0 && classes[0] === "emoticon"){
-															x[i].parentNode.removeChild(x[i].previousElementSibling);
-														}
-													}
-												}
-											}
-										}
-									}
-
-									//remove fb emo in posts <p></p>
-									if (x[i].parentNode !== null && x[i].parentNode.tagName === "I"){
-										if (x[i].parentNode.hasAttribute("title")){
-											var titles = x[i].parentNode.title.split(' ');
-											if (titles.length > 1 && titles[1] === "emoticon"){
-												if (x[i].previousElementSibling !== null){
-													if (x[i].previousElementSibling.tagName === "I"){
-														x[i].parentNode.removeChild(x[i].previousElementSibling);
-													}
-												}
-											}
-										}
-									}
-								}
-							}
+/**
+ * replace keyCombination show as text to an img element
+ * @param  {DOMelement} x focused element
+ * @return {void}   N/A
+ */
+function replaceText(element){
+	if (valid(element)){
+		for (var j = 0; j < element.childNodes.length; j++){
+			//only process text child nodes
+			if (element.childNodes[j].nodeType === 3 && element.childNodes[j].textContent.length > 0){
+				//initially, element have same content as text child node
+				var newHTML = element.childNodes[j].textContent;
+				var changed = false;
+				//search for matched yahoo key
+				for (var k = emoticons.length - 1; k >= 0; k--){
+					for (var w = 0; w < emoticons[k].keys.length; w++){
+						if (newHTML.includes(emoticons[k].keys[w])){
+							newHTML = replaceAllInstances(newHTML, emoticons[k].keys[w], getImgHtml(emoticons[k].src));
+							changed = true;
 						}
+					}
+				}
+				
+				//replace text node by element node with updated yahoo emo
+				if (changed){
+					//fix bug duplicate when replacing old emoticons in posts and comments
+					if (isOldEmoInPostsComments(element)){
+						if (!containText(newHTML)){ //fix (:P)oop: bug, only replace if the whole string match
+							element.parentNode.innerHTML = newHTML;
+						}
+					} else {
+						//create new element, ready to replace the child node
+						var newElement = document.createElement("SPAN");
+						element.replaceChild(newElement, element.childNodes[j]);
+
+						//replace temp span element with newHTML (text and img nodes)
+						element.childNodes[j].outerHTML = newHTML;	
 					}
 				}
 			}
@@ -222,252 +209,63 @@ function replaceText(x){
 }
 
 /**
- * get the image code based on the keyComb array index
- * @param  {int} id the array index
- * @return {string}    the code to inject into HTML
+ * check if the element is valid by some condition:
+ * do not change while typing
+ * do not change facebook alternate name
+ * skip if element do not contain text
+ * skip if there aren't any textNode in childNodes
+ * @param  {DOMelement} element processing element
+ * @return {boolean}         return if the element is in good condition or not
  */
-function getCode(id){
-	if (id === 137){ //if BUZZ then go to different code
-		return "<span style=\"color: red; font-weight: bold;\">BUZZ!!!</span>";
-	} else {
-		var s = "\"" + chrome.extension.getURL("images/YahooEmoticons/" + (id + 1) + ".gif") + "\"";
-		var res = "<img src=" + s + ">";
-		return res;
-	}
-}
-function preg_quote( str ) {
-    // http://kevin.vanzonneveld.net
-    // +   original by: booeyOH
-    // +   improved by: Ates Goral (http://magnetiq.com)
-    // +   improved by: Kevin van Zonneveld (http://kevin.vanzonneveld.net)
-    // +   bugfixed by: Onno Marsman
-    // *     example 1: preg_quote("$40");
-    // *     returns 1: '\$40'
-    // *     example 2: preg_quote("*RRRING* Hello?");
-    // *     returns 2: '\*RRRING\* Hello\?'
-    // *     example 3: preg_quote("\\.+*?[^]$(){}=!<>|:");
-    // *     returns 3: '\\\.\+\*\?\[\^\]\$\(\)\{\}\=\!\<\>\|\:'
-
-    return (str+'').replace(/([\\\.\+\*\?\[\^\]\$\(\)\{\}\=\!\<\>\|\:])/g, "\\$1");
-}
-function toRegex(str, idx){
-	//only run MAIN for basic emoticons
-	var basic = false;
-	for (var i = 0; i < basicEmo.length; i++){
-		if (idx === basicEmo[i] - 1) {
-			basic = true;
-			break;
-		}
-	}
-
-	var temp = preg_quote(str);
-	// //MAIN: case insensitive, optional '-' character
-	if (basic){
-		if (temp.includes("-")){
-			//can remove '-' in keycombine. Ex: can show :) if keycomb is :-)
-			temp = temp.replace("-", "-?");
-		} else if (temp.includes("\:")){
-			//can add '-' after ':' in keycombine. 
-			//Ex: can show :-) if keycomb is :)
-			//
-			temp = temp.replace("\:", "\:-?");
-		} else if (idx === 2){ //show emo for ;-) <-> ;) 
-			temp = temp.replace(";", "\;-?");
-		}
-	}
-	return ( new RegExp( "(" + temp + ")" , 'gi' ) );
-}
-function containSpecialChar(str){
-	for (var i = 0; i < specialChar.length; i++){
-		if (str.includes(specialChar[i])){
-			return true;
+function valid(element){
+	if (element.textContent.length > 0){ //have text in subtree
+		if (element.childNodes.length > element.children.length){ //contains text, comment nodes
+			if (!element.hasAttribute("data-text")){ //attribute data-text show when typing,
+				if (!element.classList.contains("alternate_name")){ //prevent change the alt name
+					return true;
+				}
+			}
 		}
 	}
 	return false;
 }
-function tryBuzz(element){
-	var senderName = getSenderName(element);
-	if (senderName !== null){
-		if (!disableBuzz.has(senderName)){
-			disableBuzz.add(senderName);
-			setTimeout(function(){
-				disableBuzz.delete(senderName);
-			}, 5000);
 
-			//send request to show notification and play sound
-			chrome.runtime.sendMessage({
-				buzzActivated: true,
-				senderName: senderName
-			});
-			shakePopup(element);
+function isOldEmoInPostsComments(element){
+	if (element.parentNode !== null){
+		if (element.parentNode.hasAttribute("title")){
+			var titles = element.parentNode.title.split(' ');
+			if (titles.length > 1 && titles[1] === "emoticon"){
+				return true;
+			}
 		}
 	}
-}
-function getSenderName(element){
-	if (element === null) {
-		return null;
-	}
-
-	if (element.className === "fbNubFlyoutOuter"){
-		//chat popup
-		return element.getElementsByClassName("fbNubFlyoutTitlebar")[0].textContent;
-	}
-	return getSenderName(element.parentNode);
+	return false;
 }
 
-function shakePopup(element){
-	if (element === null){
-		return;
+function containText(html){
+	var newElement = document.createElement("SPAN");
+	newElement.innerHTML = html;
+	if (newElement.textContent.length === 0) {
+		return false;
 	}
-	if (element.className === "fbNubFlyoutOuter"){
-		$( element ).effect( "shake" );
-		return;
-	}
-	shakePopup(element.parentNode);
-	return;
+	return true;
 }
 
-const specialChar = ['!', '"', '#', '$', '%', '&', '\'', '(', ')', '*', '+', '-', '/', ';', '<', '=', '>', '?', '@', '\\', ']', '^', '_', '`', '|', '}', '~', '{', ':'];
-const basicEmo = [1,2,3,4,8,10,11,13,15,16,17,20,21,22,46];
-const keyComb = [
-	":)",
-	":(",
-	";)",
-	":D",
-	";;)",
-	">:D<",
-	":-/",
-	":x",
-	":\">",
-	":P",
-	":-*",
-	"=((",
-	":-O",
-	"X(",
-	":>",
-	"B-)",
-	":-S",
-	"#:-S",
-	">:)",
-	":((",
-	":))",
-	":|",
-	"/:)",
-	"=))",
-	"O:-)",
-	":-B",
-	"=;",
-	"I-)",
-	"8-|",
-	"L-)",
-	":-&",
-	":-$",
-	"[-(",
-	":O)",
-	"8-}",
-	"<:-P",
-	"(:|",
-	"=P~",
-	":-?",
-	"#-o",
-	"=D>",
-	":-SS",
-	"@-)",
-	":^o",
-	":-w",
-	":-<",
-	">:P",
-	"<):)",
-	":@)",
-	"3:-O",
-	":(|)",
-	"~:>",
-	"@};-",
-	"%%-",
-	"**==",
-	"(~~)",
-	"~O)",
-	"*-:)",
-	"8-X",
-	"=:)",
-	">-)",
-	":-L",
-	"[-O<",
-	"$-)",
-	":-\"",
-	"b-(",
-	":)>-",
-	"[-X",
-	"\\:D/",
-	">:/",
-	";))",
-	"o->",
-	"o=>",
-	"o-+",
-	"(%)",
-	":-@",
-	"^:)^",
-	":-j",
-	"(*)",
-	"",
-	"",
-	"",
-	"",
-	"",
-	"",
-	"",
-	"",
-	"",
-	"",
-	"",
-	"",
-	"",
-	"",
-	"",
-	"",
-	"",
-	"",
-	"",
-	"",
-	":)]",
-	":-c",
-	"~X(",
-	":-h",
-	":-t",
-	"8->",
-	":-??",
-	"%-(",
-	":o3",
-	"X_X",
-	":!!",
-	"\\m/",
-	":-q",
-	":-bd",
-	"^#(^",
-	":bz",
+function getImgHtml(src){
+	return "<img src=\"" + chrome.extension.getURL(src) + "\" style=\"vertical-align: middle;\">";
+}
 
-	//hidden emoticons from yahoo messenger 11
-	"~^o^~",
-	"'@^@|||",
-	"[]---",
-	"^o^||3",
-	":-(||>",
-	"'+_+",
-	":::^^:::",
-	"o|^_^|o",
-	":puke!",
-	"o|\\~",
-	"o|:-)",
-	":(fight)",
-	"%*-{",
-	"%||:-{",
-	"&[]",
-	":(tv)",
-	"?@_@?",
-	":->~~",
-	"'@-@",
-	":(game)",
-	":-)/\\:-)",
-	"[]==[]",
-	"<ding>",
-];
+function replaceAllInstances(str, origin, token){
+	return str.split(origin).join(token);
+}
+
+function getFilename(fullPath){
+	var filename = fullPath.replace(/^.*[\\\/]/, '');
+	return filename;
+}
+
+function debug(str){
+	if (debugging) {
+		console.log(str);
+	}
+}

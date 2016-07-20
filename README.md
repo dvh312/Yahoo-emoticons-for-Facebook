@@ -1,7 +1,39 @@
 # Facebook-Emoticons
 A chrome extension can change Facebook text in messages, posts, comments into Yahoo! Messenger emoticons.
 
+Download link: http://goo.gl/mHKx4O
+
 Show Yahoo Emoticons for Facebook and Messenger.
+
+Version 1.7.24
+- Fix (:p)oop: bug
+
+Version 1.7.23
+- Fix bug with clear storage
+
+Version 1.7.22
+- Fix bug that do not run script after restarted Chrome
+
+Version 1.7.21
+- Avoid freezing the browser when running
+
+Version 1.7.20
+- Fix some minor bugs that cause not showing emo properly
+
+Version 1.7.19
+- Fix emoticons vertical align
+
+Version 1.7.18
+- Do not zoom replaced big emoticons
+
+Version 1.7.17
+- Fix bug in emoji table
+
+Version 1.7.16
+- Fix some minor bug and tweak
+
+Version 1.7.15
+- Fix bug cannot show some new emoticons
 
 Version 1.7.14
 - Tweak by increasing idle time
