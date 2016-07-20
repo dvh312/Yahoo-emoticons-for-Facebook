@@ -183,7 +183,9 @@ function replaceText(element){
 				if (changed){
 					//fix bug duplicate when replacing old emoticons in posts and comments
 					if (isOldEmoInPostsComments(element)){
-						element.parentNode.innerHTML = newHTML;
+						if (!containText(newHTML)){ //fix (:P)oop: bug, only replace if the whole string match
+							element.parentNode.innerHTML = newHTML;
+						}
 					} else {
 						//create new element, ready to replace the child node
 						var newElement = document.createElement("SPAN");
@@ -228,6 +230,15 @@ function isOldEmoInPostsComments(element){
 		}
 	}
 	return false;
+}
+
+function containText(html){
+	var newElement = document.createElement("SPAN");
+	newElement.innerHTML = html;
+	if (newElement.textContent.length === 0) {
+		return false;
+	}
+	return true;
 }
 
 function getImgHtml(src){
