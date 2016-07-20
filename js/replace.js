@@ -124,6 +124,15 @@ function replace(x){
 		} else {
 			replaceText(x[i]);
 		}
+
+		if (isBuzzElement(x[i])){
+			replaceBuzz(x[i]);
+			// var name = getBuzzUser(x[i]);
+			var time = getBuzzTime(x[i]);
+			console.log(time);
+			console.log(getCurrentTime12H());
+			console.log(time === getCurrentTime12H());
+		}
 	}
 }
 
@@ -262,6 +271,55 @@ function replaceAllInstances(str, origin, token){
 function getFilename(fullPath){
 	var filename = fullPath.replace(/^.*[\\\/]/, '');
 	return filename;
+}
+
+function isBuzzElement(element){
+	if (element.children.length === 0){ //only leaf node
+		if (element.textContent.length > 0) { //must contain text
+			if (element.textContent === "<ding>"){
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+function replaceBuzz(element){
+	element.setAttribute("style", "color: red; font-weight: bold;");
+	element.textContent = "BUZZ!!!";
+}
+
+function getBuzzTime(element){
+	var timeElement = getXthParent(element, 6);
+	console.log(timeElement.outerHTML);
+	if (timeElement !== null && timeElement.hasAttribute("data-tooltip-content")){
+		return timeElement.getAttribute("data-tooltip-content");
+	}
+	return null;
+}
+
+function getXthParent(element, x){
+	while (x > 0 && element.parentNode !== null){
+		element = element.parentNode;
+		x--;
+	}
+	if (x === 0) {
+		return element;
+	} else {
+		return null;
+	}
+}
+
+function getCurrentTime12H() {
+	var date = new Date();
+	var hours = date.getHours();
+	var minutes = date.getMinutes();
+	var ampm = hours >= 12 ? 'pm' : 'am';
+	hours = hours % 12;
+	hours = hours ? hours : 12; // the hour '0' should be '12'
+	minutes = minutes < 10 ? '0'+minutes : minutes;
+	var strTime = hours + ':' + minutes + ampm;
+	return strTime;
 }
 
 function debug(str){
