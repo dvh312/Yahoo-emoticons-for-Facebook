@@ -1,6 +1,8 @@
 const debugging = false; //turn print debug on or off
 const idleTime = 250; //ms
-var timerId;
+const weekday = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+var timerId; //save the timerId to clear
 var isEnabled, emoticons; //storageVariable
 var queue = []; //main queue to save works
 
@@ -127,11 +129,8 @@ function replace(x){
 
 		if (isBuzzElement(x[i])){
 			replaceBuzz(x[i]);
-			// var name = getBuzzUser(x[i]);
-			var time = getBuzzTime(x[i]);
-			console.log(time);
-			console.log(getCurrentTime12H());
-			console.log(time === getCurrentTime12H());
+
+			tryBuzz( getBuzzUserTime(x[i]) ); //only work with chatTab at fb.com
 		}
 	}
 }
@@ -277,7 +276,9 @@ function isBuzzElement(element){
 	if (element.children.length === 0){ //only leaf node
 		if (element.textContent.length > 0) { //must contain text
 			if (element.textContent === "<ding>"){
-				return true;
+				if (!element.hasAttribute("data-text")){ //attribute data-text show when typing,
+					return true;
+				}
 			}
 		}
 	}
@@ -289,11 +290,24 @@ function replaceBuzz(element){
 	element.textContent = "BUZZ!!!";
 }
 
-function getBuzzTime(element){
-	var timeElement = getXthParent(element, 6);
-	console.log(timeElement.outerHTML);
-	if (timeElement !== null && timeElement.hasAttribute("data-tooltip-content")){
-		return timeElement.getAttribute("data-tooltip-content");
+function getBuzzUserTime(element){
+	var rootElement = getXthParent(element, 9);
+	var timeElements = rootElement.getElementsByTagName("A");
+	if (rootElement === null || timeElements.length === 0) {
+		return null;
+	}
+	if (timeElements[0].hasAttribute("data-tooltip-content")){
+		var temp = timeElements[0].getAttribute("data-tooltip-content").split(' '); //name (day of the week) time
+		var time = temp.pop();
+		//checking if the tooltip text has weekday or not, push back if it's not
+		var day = temp.pop();
+		if (weekday.indexOf(day) === -1) {
+			temp.push(day);
+		} else {
+			time = day + ' ' + time;
+		}
+		var name = temp.join(' ');
+		return [name, time];
 	}
 	return null;
 }
@@ -307,6 +321,21 @@ function getXthParent(element, x){
 		return element;
 	} else {
 		return null;
+	}
+}
+
+function tryBuzz(userTime){
+	//userTime[0] = username, userTime[1] = time
+	if (userTime !== null){
+		if (userTime[1] === getCurrentTime12H()){ //only send buzz request if the <ding>'s time is in the same min (at most 60s)
+			//send buzz request, play sound, make focus on this tab
+			chrome.runtime.sendMessage({
+				type: "buzz",
+				user: userTime[0]
+			}, function(response) {
+				debug("buzz request sent");
+			});
+		}
 	}
 }
 

@@ -1,5 +1,7 @@
 const debugging = false;
+const buzzBreak = 2 * 60000; //2min Time that user need to wait before buzz again
 var isEnabled = true; //initial the isEnable value
+var recentBuzz = new Set(); //save the username of buzz event in the last (buzzBreak)ms
 
 chrome.storage.sync.clear(function(){
     //always set to default, remove this if add user config
@@ -48,6 +50,27 @@ chrome.browserAction.onClicked.addListener(function(tab) {
     });
 });
 
+//receive buzz request from content script
+chrome.runtime.onMessage.addListener(
+    function(request, sender, sendResponse) {
+        if (request.type === "buzz"){
+            if (!recentBuzz.has(request.user)){
+                //play sound
+                var buzzAudio = new Audio();
+                buzzAudio.src = "sounds/buzz.mp3";
+                buzzAudio.play();
+
+                //focus on the chat tab
+                chrome.windows.update(sender.tab.windowId, {focused: true});
+                chrome.tabs.update(sender.tab.id, {selected: true});
+
+                //mark that user, turn off buzz for 2min
+                recentBuzz.add(request.user);
+                setTimeout(function(){ recentBuzz.delete(request.user) }, buzzBreak);
+            }
+        }
+    }
+);
 
 function refreshIcon(){
     //toggle icon
