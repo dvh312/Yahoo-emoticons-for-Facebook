@@ -1,4 +1,4 @@
-const debugging = false; //turn print debug on or off
+const debugging = true; //turn print debug on or off
 const idleTime = 250; //ms
 const weekday = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -333,7 +333,11 @@ function tryBuzz(userTime){
 				type: "buzz",
 				user: userTime[0]
 			}, function(response) {
-				debug("buzz request sent");
+				if (response.type === "ok") {
+					debug("buzzed");
+				} else {
+					debug("buzz fail");
+				}
 			});
 		}
 	}

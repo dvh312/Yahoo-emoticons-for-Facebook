@@ -1,4 +1,4 @@
-const debugging = false;
+const debugging = true;
 const buzzBreak = 2 * 60000; //2min Time that user need to wait before buzz again
 var isEnabled = true; //initial the isEnable value
 var recentBuzz = new Set(); //save the username of buzz event in the last (buzzBreak)ms
@@ -54,7 +54,12 @@ chrome.browserAction.onClicked.addListener(function(tab) {
 chrome.runtime.onMessage.addListener(
     function(request, sender, sendResponse) {
         if (request.type === "buzz"){
+            var status = "fail";
             if (!recentBuzz.has(request.user)){
+                //mark that user, turn off buzz for 2min
+                recentBuzz.add(request.user);
+                setTimeout(function(){ recentBuzz.delete(request.user) }, buzzBreak);
+
                 //play sound
                 var buzzAudio = new Audio();
                 buzzAudio.src = "sounds/buzz.mp3";
@@ -64,10 +69,9 @@ chrome.runtime.onMessage.addListener(
                 chrome.windows.update(sender.tab.windowId, {focused: true});
                 chrome.tabs.update(sender.tab.id, {selected: true});
 
-                //mark that user, turn off buzz for 2min
-                recentBuzz.add(request.user);
-                setTimeout(function(){ recentBuzz.delete(request.user) }, buzzBreak);
+                status = "ok";
             }
+            sendResponse({type: status});
         }
     }
 );
