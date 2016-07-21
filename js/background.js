@@ -1,5 +1,5 @@
-const debugging = true;
-const buzzBreak = 2 * 60000; //2min Time that user need to wait before buzz again
+const debugging = false;
+const buzzBreak = 2 * 60000; //ms Time that user need to wait before buzz again
 var isEnabled = true; //initial the isEnable value
 var recentBuzz = new Set(); //save the username of buzz event in the last (buzzBreak)ms
 
@@ -56,7 +56,7 @@ chrome.runtime.onMessage.addListener(
         if (request.type === "buzz"){
             var status = "fail";
             if (!recentBuzz.has(request.user)){
-                //mark that user, turn off buzz for 2min
+                //mark that user, turn off buzz for buzzBreak(ms)
                 recentBuzz.add(request.user);
                 setTimeout(function(){ recentBuzz.delete(request.user) }, buzzBreak);
 
