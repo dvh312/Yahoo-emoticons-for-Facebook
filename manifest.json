@@ -21,8 +21,7 @@
   ],
 
   "web_accessible_resources": [
-    "images/YahooEmoticons/*",
-    "sounds/*"
+    "images/YahooEmoticons/*"
   ],
 
   "icons": { "16": "images/icon16.png",
