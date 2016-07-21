@@ -16,7 +16,7 @@
   "content_scripts": [
     {
       "matches": ["https://www.facebook.com/*", "https://www.messenger.com/*"],
-      "js": ["js/jquery-3.0.0.min.js", "js/jquery-ui.min.js", "js/replace.js"]
+      "js": ["js/jquery-3.0.0.min.js", "js/replace.js"]
     }
   ],
 
