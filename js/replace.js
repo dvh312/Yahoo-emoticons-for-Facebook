@@ -129,8 +129,8 @@ function replace(x){
 
 		if (isBuzzElement(x[i])){
 			replaceBuzz(x[i]);
-
-			tryBuzz( getBuzzUserTime(x[i]) ); //only work with chatTab at fb.com
+			var userTime = getBuzzUserTimeTab(x[i]) || getBuzzUserTimeInboxPopout(x[i]) || getBuzzUserTimeMessenger(x[i]);
+			tryBuzz(userTime); //only work with chatTab, inbox popout at fb.com; messenger.com main chatbox
 		}
 	}
 }
@@ -290,26 +290,67 @@ function replaceBuzz(element){
 	element.textContent = "BUZZ!!!";
 }
 
-function getBuzzUserTime(element){
+function getBuzzUserTimeTab(element){
 	var rootElement = getXthParent(element, 9);
+	if (rootElement === null) {
+		return null;
+	}
 	var timeElements = rootElement.getElementsByTagName("A");
-	if (rootElement === null || timeElements.length === 0) {
+	if (timeElements.length === 0) {
 		return null;
 	}
 	if (timeElements[0].hasAttribute("data-tooltip-content")){
-		var temp = timeElements[0].getAttribute("data-tooltip-content").split(' '); //name (day of the week) time
-		var time = temp.pop();
-		//checking if the tooltip text has weekday or not, push back if it's not
-		var day = temp.pop();
-		if (weekday.indexOf(day) === -1) {
-			temp.push(day);
-		} else {
-			time = day + ' ' + time;
+		var str = timeElements[0].getAttribute("data-tooltip-content"); //name (day of the week) time
+		return fetchUserTimeFromTooltip(str);
+	}
+	return null;
+}
+
+function getBuzzUserTimeInboxPopout(element){
+	var rootElement = getXthParent(element, 3);
+	if (rootElement === null) {
+		return null;
+	}
+	if (rootElement.className === "content") {
+		if (rootElement.getElementsByClassName("snippet preview")[0].children[0].className.split(' ').indexOf("repliedLast") > -1){
+			//avoid buzz when rep
+			return null;
 		}
-		var name = temp.join(' ');
+		var name = rootElement.getElementsByClassName("author fixemoji")[0].children[0].textContent;
+		var time = rootElement.getElementsByClassName("time")[0].textContent;
+
 		return [name, time];
 	}
 	return null;
+}
+
+function getBuzzUserTimeMessenger(element){
+	var rootElement = getXthParent(element, 5);
+	if (rootElement === null) {
+		return null;
+	}
+	if (rootElement.className.split(' ').indexOf("clearfix") > -1){
+		var focusedElement = rootElement.children[0].children[0];
+		if (focusedElement.hasAttribute("data-tooltip-content")){
+			var str = focusedElement.getAttribute("data-tooltip-content");
+			return fetchUserTimeFromTooltip(str);
+		}
+	}
+	return null;
+}
+
+function fetchUserTimeFromTooltip(str){
+	var temp = str.split(' '); //name (day of the week) time
+	var time = temp.pop();
+	//checking if the tooltip text has weekday or not, push back if it's not
+	var day = temp.pop();
+	if (weekday.indexOf(day) === -1) {
+		temp.push(day);
+	} else {
+		time = day + ' ' + time;
+	}
+	var name = temp.join(' ');
+	return [name, time];
 }
 
 function getXthParent(element, x){
@@ -327,6 +368,7 @@ function getXthParent(element, x){
 function tryBuzz(userTime){
 	//userTime[0] = username, userTime[1] = time
 	if (userTime !== null){
+		debug(userTime);
 		if (userTime[1] === getCurrentTime12H()){ //only send buzz request if the <ding>'s time is in the same min (at most 60s)
 			//send buzz request, play sound, make focus on this tab
 			chrome.runtime.sendMessage({
