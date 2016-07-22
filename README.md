@@ -5,6 +5,9 @@ Download link: http://goo.gl/mHKx4O
 
 Show Yahoo Emoticons for Facebook and Messenger.
 
+Version 1.8.2
+- Better buzz detection by supporting userTime from inbox popout and messenger.com
+
 Version 1.8.1
 - Append function to event, not replacing
 - Should fix the bug about not send message when press enter
