@@ -34,11 +34,11 @@ function main(){
 		htmlChangedListener(); //add listener for HTML changed
 
 		//event call when these actions happen
-		document.onwheel = function(e){
+		document.addEventListener("wheel", function(e){
 			debug("scroll");
 			resetTimer(idleTime);
-		}
-		document.onkeydown = function(e){
+		});
+		document.addEventListener("keydown", function(e){
 			if (e.keyCode === 13){
 				debug("enter pressed");
 				doWork();	
@@ -46,11 +46,11 @@ function main(){
 				debug("key pressed");
 				resetTimer(idleTime);
 			}
-		}
-		document.onmousedown = function(e){
+		});
+		document.addEventListener("mousedown", function(e){
 			debug("clicked");
 			doWork();
-		}
+		});
 	}
 }
 
