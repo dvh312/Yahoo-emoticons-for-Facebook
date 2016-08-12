@@ -5,6 +5,10 @@ Download link: http://goo.gl/mHKx4O
 
 Show Yahoo Emoticons for Facebook and Messenger.
 
+Version 1.8.3
+- Remove buzz userTime
+- Can only buzz after 2mins
+
 Version 1.8.2
 - Better buzz detection by supporting userTime from inbox popout and messenger.com
 
