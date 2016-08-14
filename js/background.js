@@ -1,7 +1,5 @@
 const debugging = false;
-const buzzBreak = 2 * 60000; //ms Time that user need to wait before buzz again
 var isEnabled = true; //initial the isEnable value
-var canBuzz = true; //prevent continuously buzz
 
 chrome.storage.sync.clear(function(){
     //always set to default, remove this if add user config
@@ -54,26 +52,24 @@ chrome.browserAction.onClicked.addListener(function(tab) {
 chrome.runtime.onMessage.addListener(
     function(request, sender, sendResponse) {
         if (request.type === "buzz"){
-            var status = "fail";
-            if (canBuzz){
-                //turn off buzz for buzzBreak(ms)
-                canBuzz = false;
-                setTimeout(function(){
-                    canBuzz = true;
-                }, buzzBreak);
+            chrome.windows.get(sender.tab.windowId, function(window){
+                chrome.tabs.get(sender.tab.id, function(tab){
+                    //only buzz when user in another tab / window
+                    debug("buzz: window.focused=" + window.focused);
+                    debug("buzz: tab.active=" + tab.active);
+                    if (!window.focused || !tab.active){
+                        //play sound
+                        var buzzAudio = new Audio();
+                        buzzAudio.src = "sounds/buzz.mp3";
+                        buzzAudio.play();
+                        //focus on the chat tab
+                        chrome.windows.update(sender.tab.windowId, {drawAttention: true, focused: true});
+                        chrome.tabs.update(sender.tab.id, {active: true});
 
-                //play sound
-                var buzzAudio = new Audio();
-                buzzAudio.src = "sounds/buzz.mp3";
-                buzzAudio.play();
-
-                //focus on the chat tab
-                chrome.windows.update(sender.tab.windowId, {drawAttention: true, focused: true});
-                chrome.tabs.update(sender.tab.id, {selected: true});
-
-                status = "ok";
-            }
-            sendResponse({type: status});
+                        debug("buzzed");
+                    }
+                });
+            });
         }
     }
 );

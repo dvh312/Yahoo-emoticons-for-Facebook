@@ -40,7 +40,7 @@ function main(){
 		document.addEventListener("keydown", function(e){
 			if (e.keyCode === 13){
 				debug("enter pressed");
-				doWork();	
+				resetTimer(0);
 			} else {
 				debug("key pressed");
 				resetTimer(idleTime);
@@ -48,7 +48,7 @@ function main(){
 		});
 		document.addEventListener("mousedown", function(e){
 			debug("clicked");
-			doWork();
+			resetTimer(0);
 		});
 	}
 }
@@ -291,13 +291,7 @@ function replaceBuzz(element){
 function tryBuzz(){
 	chrome.runtime.sendMessage({
 		type: "buzz",
-	}, function(response) {
-		if (response.type === "ok") {
-			debug("buzzed");
-		} else {
-			debug("buzz fail");
-		}
-	});
+	}, function(response) {});
 }
 
 function debug(str){
