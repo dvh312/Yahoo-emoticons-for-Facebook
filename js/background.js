@@ -116,7 +116,7 @@ var emoticons = [{
     "keys": [";)", ";-)"],
     "src": "images/YahooEmoticons/3.gif"
 }, {
-    "fbImgFilename": "1f603.png",
+    "fbImgFilename": "1f600.png",
     "keys": [":D", ":d", ":-d", ":-D"],
     "src": "images/YahooEmoticons/4.gif"
 }, {
