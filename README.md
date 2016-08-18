@@ -5,6 +5,9 @@ Download link: http://goo.gl/mHKx4O
 
 Show Yahoo Emoticons for Facebook and Messenger.
 
+Version 1.8.5
+- Update :D source filename 1f600
+
 Version 1.8.4
 - Remove buzz delay
 - Only buzz when user is in another tab / window
