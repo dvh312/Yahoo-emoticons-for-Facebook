@@ -200,7 +200,7 @@ function replaceText(element){
 						}
 					}
 				}
-				
+				//TODO: improve this by seletor
 				//replace text node by element node with updated yahoo emo
 				if (changed){
 					//fix bug duplicate when replacing old emoticons in posts and comments
