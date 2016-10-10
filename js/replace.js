@@ -106,15 +106,18 @@ function htmlChangedListener(){
 function getNeedElements(x){
 	var allElements = [];
 	//chat popup
-	allElements.push.apply(allElements, x.querySelectorAll("._5yl5 > span"));
-	allElements.push.apply(allElements, x.querySelectorAll("._5yl5 img"));
-	//all messages fb
-	allElements.push.apply(allElements, x.querySelectorAll("._38 > span > p"));
-	allElements.push.apply(allElements, x.querySelectorAll("._38 img"));
+	allElements.push.apply(allElements, x.querySelectorAll("._5yl5 span"));
+	//inbox
+	allElements.push.apply(allElements, x.querySelectorAll("._38 span p"));
 	//comments
-	allElements.push.apply(allElements, x.querySelectorAll(".UFICommentBody > span"));
+	allElements.push.apply(allElements, x.querySelectorAll(".UFICommentBody span"));
 	//posts
-	allElements.push.apply(allElements, x.querySelectorAll("._5pbx > p"));
+	allElements.push.apply(allElements, x.querySelectorAll("._5pbx p"));
+	//MESSENGER.COM
+	allElements.push.apply(allElements, x.querySelectorAll("._3oh-")); //only text
+	allElements.push.apply(allElements, x.querySelectorAll("._3oh- span")); //img inline
+	//all emoticons img
+	allElements.push.apply(allElements, x.querySelectorAll("._1ift"));
 	return allElements;
 }
 
