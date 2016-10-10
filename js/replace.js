@@ -67,7 +67,7 @@ function resetTimer(t){
 function doWork(){
 	if (queue.length > 0){
 		var addedNode = queue.pop();
-		if (addedNode.nodeType === 1){
+		if (addedNode.nodeType === 1){ //element node
 			replace(getNeedElements(addedNode));
 		}
 		resetTimer(0); //avoid freezing the browser
@@ -105,11 +105,16 @@ function htmlChangedListener(){
  */
 function getNeedElements(x){
 	var allElements = [];
-	allElements.push.apply(allElements, x.getElementsByTagName("SPAN"));
-	allElements.push.apply(allElements, x.getElementsByTagName("P"));
-	allElements.push.apply(allElements, x.getElementsByTagName("IMG"));
-	allElements.push.apply(allElements, x.getElementsByTagName("DIV"));
-	allElements.push.apply(allElements, x.getElementsByTagName("A"));
+	//chat popup
+	allElements.push.apply(allElements, x.querySelectorAll("._5yl5 > span"));
+	allElements.push.apply(allElements, x.querySelectorAll("._5yl5 img"));
+	//all messages fb
+	allElements.push.apply(allElements, x.querySelectorAll("._38 > span > p"));
+	allElements.push.apply(allElements, x.querySelectorAll("._38 img"));
+	//comments
+	allElements.push.apply(allElements, x.querySelectorAll(".UFICommentBody > span"));
+	//posts
+	allElements.push.apply(allElements, x.querySelectorAll("._5pbx > p"));
 	return allElements;
 }
 
@@ -206,7 +211,7 @@ function replaceText(element){
 						element.replaceChild(newElement, element.childNodes[j]);
 
 						//replace temp span element with newHTML (text and img nodes)
-						element.childNodes[j].outerHTML = newHTML;	
+						element.childNodes[j].outerHTML = newHTML;
 					}
 				}
 			}
