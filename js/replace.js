@@ -118,6 +118,8 @@ function getNeedElements(x){
 	allElements.push.apply(allElements, x.querySelectorAll("._3oh- span")); //img inline
 	//all emoticons img
 	allElements.push.apply(allElements, x.querySelectorAll("._1ift"));
+	//all emotion on posts and comments
+	allElements.push.apply(allElements, x.querySelectorAll("._47e3"));
 	return allElements;
 }
 
@@ -130,6 +132,8 @@ function replace(x){
 	for (var i = 0; i < x.length; i++){
 		if (x[i].tagName === "IMG") {
 			replaceImg(x[i]);
+		} else if (x[i].className === "_47e3") {
+			replaceCommentsEmo(x[i]);
 		} else {
 			replaceText(x[i]);
 		}
@@ -147,13 +151,11 @@ function replace(x){
  * @return {void}   N/A
  */
 function replaceImg(element){
-	if (element.tagName === "IMG"){
-		var idx = srcToIndex(element.src);
-		if (idx !== null){
-			if (!element.parentNode.hasAttribute("aria-label")){
-				element.src = chrome.extension.getURL(emoticons[idx].src);
-				element.style = "height: auto; width: auto;";
-			}
+	var idx = srcToIndex(element.src);
+	if (idx !== null){
+		if (!element.parentNode.hasAttribute("aria-label")){ //do not change in picking table
+			element.src = chrome.extension.getURL(emoticons[idx].src);
+			element.style = "height: auto; width: auto;";
 		}
 	}
 }
@@ -171,6 +173,25 @@ function srcToIndex(src){
 	for (var i = 0; i < 25; i++){
 		if (emoticons[i].fbImgFilename !== undefined){
 			if (emoticons[i].fbImgFilename === filename){
+				return i;
+			}
+		}
+	}
+	return null;
+}
+
+function replaceCommentsEmo(element){
+	var idx = titleToIndex(element.title);
+	if (idx !== null){
+		element.innerHTML = getImgHtml(emoticons[idx].src);
+	}
+}
+
+function titleToIndex(title){
+	//only the first 25 emo may be replaced by facebook emo in comments
+	for (var i = 0; i < 25; i++){
+		if (emoticons[i].title !== undefined){
+			if (emoticons[i].title === title){
 				return i;
 			}
 		}
@@ -203,19 +224,12 @@ function replaceText(element){
 				//TODO: improve this by seletor
 				//replace text node by element node with updated yahoo emo
 				if (changed){
-					//fix bug duplicate when replacing old emoticons in posts and comments
-					if (isOldEmoInPostsComments(element)){
-						if (!containText(newHTML)){ //fix (:P)oop: bug, only replace if the whole string match
-							element.parentNode.innerHTML = newHTML;
-						}
-					} else {
-						//create new element, ready to replace the child node
-						var newElement = document.createElement("SPAN");
-						element.replaceChild(newElement, element.childNodes[j]);
+					//create new element, ready to replace the child node
+					var newElement = document.createElement("SPAN");
+					element.replaceChild(newElement, element.childNodes[j]);
 
-						//replace temp span element with newHTML (text and img nodes)
-						element.childNodes[j].outerHTML = newHTML;
-					}
+					//replace temp span element with newHTML (text and img nodes)
+					element.childNodes[j].outerHTML = newHTML;
 				}
 			}
 		}
@@ -244,29 +258,8 @@ function valid(element){
 	return false;
 }
 
-function isOldEmoInPostsComments(element){
-	if (element.parentNode !== null){
-		if (element.parentNode.hasAttribute("title")){
-			var titles = element.parentNode.title.split(' ');
-			if (titles.length > 1 && titles[1] === "emoticon"){
-				return true;
-			}
-		}
-	}
-	return false;
-}
-
-function containText(html){
-	var newElement = document.createElement("SPAN");
-	newElement.innerHTML = html;
-	if (newElement.textContent.length === 0) {
-		return false;
-	}
-	return true;
-}
-
 function getImgHtml(src){
-	return "<img src=\"" + chrome.extension.getURL(src) + "\" style=\"vertical-align: middle;\">";
+	return "<img src=\"" + chrome.extension.getURL(src) + "\" style=\"vertical-align: middle; height: auto; width: auto;\">";
 }
 
 function replaceAllInstances(str, origin, token){

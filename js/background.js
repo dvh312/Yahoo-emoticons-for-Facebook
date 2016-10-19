@@ -105,18 +105,22 @@ function debug(str){
 
 var emoticons = [{
     "fbImgFilename": "1f642.png",
+    "title": "smile emoticon",
     "keys": [":)", ":-)"],
     "src": "images/YahooEmoticons/1.gif"
 }, {
     "fbImgFilename": "1f61e.png",
+    "title": "frown emoticon",
     "keys": [":(", ":-("],
     "src": "images/YahooEmoticons/2.gif"
 }, {
     "fbImgFilename": "1f609.png",
+    "title": "wink emoticon",
     "keys": [";)", ";-)"],
     "src": "images/YahooEmoticons/3.gif"
 }, {
     "fbImgFilename": "1f600.png",
+    "title": "grin emoticon",
     "keys": [":D", ":d", ":-d", ":-D"],
     "src": "images/YahooEmoticons/4.gif"
 }, {
@@ -127,6 +131,7 @@ var emoticons = [{
     "src": "images/YahooEmoticons/6.gif"
 }, {
     "fbImgFilename": "1f615.png",
+    "title": "unsure emoticon",
     "keys": [":-/", ":-\\"],
     "src": "images/YahooEmoticons/7.gif"
 }, {
@@ -137,10 +142,12 @@ var emoticons = [{
     "src": "images/YahooEmoticons/9.gif"
 }, {
     "fbImgFilename": "1f61b.png",
+    "title": "tongue emoticon",
     "keys": [":P", ":p", ":-p", ":-P"],
     "src": "images/YahooEmoticons/10.gif"
 }, {
     "fbImgFilename": "1f617.png",
+    "title": "kiss emoticon",
     "keys": [":-*", ":*"],
     "src": "images/YahooEmoticons/11.gif"
 }, {
@@ -148,9 +155,12 @@ var emoticons = [{
     "src": "images/YahooEmoticons/12.gif"
 }, {
     "fbImgFilename": "1f62e.png",
+    "title": "gasp emoticon",
     "keys": [":-O", ":-o", ":o", ":O"],
     "src": "images/YahooEmoticons/13.gif"
 }, {
+    "fbImgFilename": "1f621.png",
+    "title": "upset emoticon",
     "keys": ["X(", "x(", "x-(", "X-(", ":@"],
     "src": "images/YahooEmoticons/14.gif"
 }, {
@@ -158,6 +168,7 @@ var emoticons = [{
     "src": "images/YahooEmoticons/15.gif"
 }, {
     "fbImgFilename": "1f60e.png",
+    "title": "glasses emoticon",
     "keys": ["B-)", "b-)", "b)", "B)"],
     "src": "images/YahooEmoticons/16.gif"
 }, {
@@ -187,6 +198,7 @@ var emoticons = [{
     "src": "images/YahooEmoticons/24.gif"
 }, {
     "fbImgFilename": "1f607.png",
+    "title": "angel emoticon",
     "keys": ["O:-)", "o:-)", "O:)", "o:)"],
     "src": "images/YahooEmoticons/25.gif"
 }, {
