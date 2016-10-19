@@ -5,6 +5,9 @@ Download link: http://goo.gl/mHKx4O
 
 Show Yahoo Emoticons for Facebook and Messenger.
 
+Version 1.8.8
+- Supports more emoticons in comments and posts
+
 Version 1.8.7
 - Supports messenger.com
 
