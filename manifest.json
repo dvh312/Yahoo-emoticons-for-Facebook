@@ -1,9 +1,9 @@
 {
   "manifest_version": 2,
 
-  "name": "Facebook Emoticons",
-  "description": "Change Facebook text into emoticons",
-  "version": "1.8.8",
+  "name": "Yahoo emoticons for Facebook",
+  "description": "Change text into Yahoo! Messenger emoticons",
+  "version": "1.8.9",
 
   "background": {
     "scripts": ["js/background.js"]
