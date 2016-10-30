@@ -1,4 +1,4 @@
-# Facebook-Emoticons
+# Yahoo-emoticons-for-Facebook
 A chrome extension can change Facebook text in messages, posts, comments into Yahoo! Messenger emoticons.
 
 Download link: http://goo.gl/mHKx4O
