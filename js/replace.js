@@ -210,18 +210,27 @@ function replaceText(element){
 			//only process text child nodes
 			if (element.childNodes[j].nodeType === 3 && element.childNodes[j].textContent.length > 0){
 				//initially, element have same content as text child node
-				var newHTML = element.childNodes[j].textContent;
+				var words = element.childNodes[j].textContent.split(' ');
 				var changed = false;
 				//search for matched yahoo key
-				for (var k = emoticons.length - 1; k >= 0; k--){
-					for (var w = 0; w < emoticons[k].keys.length; w++){
-						if (newHTML.includes(emoticons[k].keys[w])){
-							newHTML = replaceAllInstances(newHTML, emoticons[k].keys[w], getImgHtml(emoticons[k].src));
-							changed = true;
+				for (var word = 0; word < words.length; word++){
+					var stop = false; //only change one emoticon in each word
+					for (var k = emoticons.length - 1; k >= 0; k--){
+						if (stop) break;
+						for (var w = 0; w < emoticons[k].keys.length; w++){
+							if (stop) break;
+							//the emoticon need to be the prefix of the word
+							if (words[word].indexOf(emoticons[k].keys[w]) === 0){
+								//only replace first instance
+								words[word] = words[word].replace(emoticons[k].keys[w], getImgHtml(emoticons[k].src));
+								changed = true;
+								stop = true;
+							}
 						}
 					}
 				}
-				//TODO: improve this by seletor
+				
+				var newHTML = words.join(' ');
 				//replace text node by element node with updated yahoo emo
 				if (changed){
 					//create new element, ready to replace the child node
@@ -230,6 +239,8 @@ function replaceText(element){
 
 					//replace temp span element with newHTML (text and img nodes)
 					element.childNodes[j].outerHTML = newHTML;
+					//Note: =)):))=)) still works because after updating the HTML, 
+					//:))=)) textnode will be catched again by the listener, then =))
 				}
 			}
 		}
@@ -260,10 +271,6 @@ function valid(element){
 
 function getImgHtml(src){
 	return "<img src=\"" + chrome.extension.getURL(src) + "\" style=\"vertical-align: middle; height: auto; width: auto;\">";
-}
-
-function replaceAllInstances(str, origin, token){
-	return str.split(origin).join(token);
 }
 
 function getFilename(fullPath){
