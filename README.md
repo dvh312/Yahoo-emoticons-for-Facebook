@@ -5,6 +5,9 @@ Download link: https://chrome.google.com/webstore/detail/yahoo-emoticons-for-fac
 
 Show Yahoo Emoticons for Facebook and Messenger.
 
+Version 1.8.10
+- Only replace the first occurrence of a single word
+
 Version 1.8.9
 - Change name to 'Yahoo emoticons for Facebook'
 
