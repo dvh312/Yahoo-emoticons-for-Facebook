@@ -132,7 +132,7 @@ function replace(x){
 	for (var i = 0; i < x.length; i++){
 		if (x[i].tagName === "IMG") {
 			replaceImg(x[i]);
-		} else if (x[i].className === "_47e3") {
+		} else if (x[i].classList.contains("_47e3")){
 			replaceCommentsEmo(x[i]);
 		} else {
 			replaceText(x[i]);
