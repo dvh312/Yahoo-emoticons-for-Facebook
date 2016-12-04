@@ -183,6 +183,18 @@ function srcToIndex(src){
 function replaceCommentsEmo(element){
 	var idx = titleToIndex(element.title);
 	if (idx !== null){
+		if (idx === 0) { //smile emoticon :)
+			if (element.nextSibling !== null){
+				if (element.nextSibling.nodeType === 3){
+					if (element.nextSibling.textContent[0] === ')'){
+						element.removeAttribute("title");
+						element.innerHTML = getImgHtml(emoticons[20].src);
+						element.nextSibling.textContent = element.nextSibling.textContent.substr(1);
+						return;
+					}
+				}
+			}
+		}
 		element.innerHTML = getImgHtml(emoticons[idx].src);
 	}
 }
