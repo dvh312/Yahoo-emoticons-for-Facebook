@@ -188,7 +188,7 @@ function replaceCommentsEmo(element){
 				if (element.nextSibling.nodeType === 3){
 					if (element.nextSibling.textContent[0] === ')'){
 						element.removeAttribute("title");
-						element.innerHTML = getImgHtml(emoticons[20].src);
+						element.innerHTML = getImgHtml(emoticons[20].src); //replace with :)) emo
 						element.nextSibling.textContent = element.nextSibling.textContent.substr(1);
 						return;
 					}
