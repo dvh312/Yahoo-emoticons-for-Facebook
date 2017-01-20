@@ -5,6 +5,9 @@ Download link: https://chrome.google.com/webstore/detail/yahoo-emoticons-for-fac
 
 Show Yahoo Emoticons for Facebook and Messenger.
 
+Version 1.8.13
+- Avoid replacing original CSS
+
 Version 1.8.12
 - Fix :)) emoticon in posts, show :)) instead of :) and )
 

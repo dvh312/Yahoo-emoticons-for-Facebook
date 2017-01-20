@@ -155,7 +155,8 @@ function replaceImg(element){
 	if (idx !== null){
 		if (!element.parentNode.hasAttribute("aria-label")){ //do not change in picking table
 			element.src = chrome.extension.getURL(emoticons[idx].src);
-			element.style = "height: auto; width: auto;";
+			element.style.height = "auto";
+			element.style.width = "auto";
 		}
 	}
 }
@@ -304,7 +305,8 @@ function isBuzzElement(element){
 }
 
 function replaceBuzz(element){
-	element.setAttribute("style", "color: red; font-weight: bold;");
+	element.style.color = "red";
+	element.style.fontWeight = "bold";
 	element.textContent = "BUZZ!!!";
 }
 
