@@ -107,8 +107,6 @@ function getNeedElements(x){
 	var allElements = [];
 	//chat popup
 	allElements.push.apply(allElements, x.querySelectorAll("._5yl5 span"));
-	//inbox
-	allElements.push.apply(allElements, x.querySelectorAll("._38 span p"));
 	//comments
 	allElements.push.apply(allElements, x.querySelectorAll(".UFICommentBody span"));
 	//posts
