@@ -22,8 +22,35 @@ class Service {
     });
   }
 
-  addYahooEmoticonPickerButton() {
+  addYahooEmoticonPickerButton(categoryElement) {
+    if (!categoryElement){
+      return;
+    }
 
+    // Prevent adding multiple times because of mutations listening.
+    if (categoryElement.querySelector('#yahooButton')) {
+      return;
+    }
+
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = '<div id="yahooButton" class="_1uwx" role="presentation" data-hover="tooltip" data-tooltip-content="Yahoo!"><img class="_2560 _1ift img" src="' + chrome.extension.getURL('images/icon16.png') + '" alt=""></div>';
+
+    // Added onClicked handler and switching grey background logic.
+    const yahooButton = wrapper.children[0];
+    yahooButton.onclick = this.onYahooCategoryClicked.bind(this, yahooButton);
+    for (const button of categoryElement.children) {
+      button.addEventListener('click', () => yahooButton.classList.remove('_1uwz'));
+    }
+
+    categoryElement.appendChild(wrapper.children[0]);
+  };
+
+  onYahooCategoryClicked(yahooButton) {
+    // Switch the grey background to Yahoo! button.
+    for (const button of yahooButton.parentNode.children) {
+      button.classList.remove('_1uwz');
+    }
+    yahooButton.classList.add('_1uwz');
   }
 
   checkEnabledStatus() {
@@ -37,6 +64,8 @@ class Service {
     if (!origin.querySelectorAll) {
       return;
     }
+
+    this.addYahooEmoticonPickerButton(document.querySelector('div._1uwv'));
 
     // Messenger
     this.replace(origin.querySelectorAll('span._3oh-._58nk, span._3oh-._58nk > span'));

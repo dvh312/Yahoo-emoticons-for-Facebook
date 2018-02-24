@@ -28,7 +28,7 @@
     }
   ],
   "web_accessible_resources": [
-    "images/YahooEmoticons/*"
+    "images/*"
   ],
   "permissions": [
     "https://www.facebook.com/*",
