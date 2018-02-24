@@ -19,11 +19,11 @@ class BackgroundManager {
   refreshIcon() {
     if (this.isEnabled) {
       chrome.browserAction.setIcon({
-        path: './images/icon.png'
+        path: './images/icon38.png'
       });
     } else {
       chrome.browserAction.setIcon({
-        path: './images/iconGrey.png'
+        path: './images/iconGrey38.png'
       });
     }
   }
