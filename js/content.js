@@ -43,7 +43,7 @@ class Service {
     this.replace(origin.querySelectorAll('span._47e3._5mfr > img')); // Emoticons in posts and comments.
 
     // Both
-    this.replace(origin.querySelectorAll('img._1ift.img:not(._1lih)')); // Emoticons images (excluded picking table).
+    this.replace(origin.querySelectorAll('img._1ift.img:not(._1lih):not(._2560)')); // Emoticons images (excluded picking table).
   }
 
   getFilename(fullPath) {
