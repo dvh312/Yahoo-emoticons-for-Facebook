@@ -3,7 +3,7 @@
 
   "name": "Yahoo emoticons for Facebook",
   "description": "Change text into Yahoo! Messenger emoticons",
-  "version": "1.8.14",
+  "version": "2.0.0",
 
   "background": {
     "scripts": ["js/background.js"]
@@ -16,7 +16,7 @@
   "content_scripts": [
     {
       "matches": ["https://www.facebook.com/*", "https://www.messenger.com/*"],
-      "js": ["js/jquery-3.0.0.min.js", "js/replace.js"]
+      "js": ["js/jquery-3.3.1.min.js", "js/content.js"]
     }
   ],
 

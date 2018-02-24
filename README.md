@@ -160,7 +160,7 @@ Version 1.5.4
 Version 1.5.3
 - Do not need 'tabs' permission
 - Change some function name
-- Clean up replace.js comments
+- Clean up content.js comments
 
 Version 1.5.2
 - Tweak for longer battery life
