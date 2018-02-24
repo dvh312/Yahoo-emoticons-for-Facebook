@@ -34,14 +34,16 @@ class Service {
     }
 
     // Messenger
-    this.replace(origin.querySelectorAll('._3oh-._58nk, ._3oh-._58nk > span'));
+    this.replace(origin.querySelectorAll('span._3oh-._58nk, span._3oh-._58nk > span'));
 
     // Facebook
-    this.replace(origin.querySelectorAll('._5yl5 > span, ._5yl5 > span > span')); // Chat popup.
-    this.replace(origin.querySelectorAll('.UFICommentBody > span')); // Comments.
-    this.replace(origin.querySelectorAll('div._5_jv._58jw > p')); // Posts.
+    this.replace(origin.querySelectorAll('span._5yl5 > span, span._5yl5 > span > span')); // Chat popup without/with FB emoticons.
+    this.replace(origin.querySelectorAll('div._5pbx.userContent._3576 > p, div._5pbx.userContent._3576 > div > p')); // Text in posts / shared posts.
+    this.replace(origin.querySelectorAll('span.UFICommentBody > span')); // Text in comments.
+    this.replace(origin.querySelectorAll('span._47e3._5mfr > img')); // Emoticons in posts and comments.
+
+    // Both
     this.replace(origin.querySelectorAll('img._1ift.img:not(._1lih)')); // Emoticons images (excluded picking table).
-    this.replace(origin.querySelectorAll('span._47e3._5mfr, span._47e3._5mfr > img')); // Emoticons on posts.
   }
 
   getFilename(fullPath) {
@@ -94,7 +96,7 @@ class Service {
           if (element.parentNode.nextSibling.nodeType === 3) {
             if (element.parentNode.nextSibling.textContent[0] === ')') {
               element.src = chrome.extension.getURL(emoticons[20].src); //replace with :)) emo
-              element.parentNode.nextSibling.textContent = element.nextSibling.textContent.substr(1);
+              element.parentNode.nextSibling.nodeValue = element.parentNode.nextSibling.nodeValue.substr(1);
             }
           }
         }
