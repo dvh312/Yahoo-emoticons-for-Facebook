@@ -124,11 +124,6 @@ function replace(x) {
     } else {
       replaceText(x[i]);
     }
-
-    if (isBuzzElement(x[i])) {
-      replaceBuzz(x[i]);
-      tryBuzz();
-    }
   }
 }
 
@@ -276,32 +271,6 @@ function getImgHtml(src) {
 function getFilename(fullPath) {
   var filename = fullPath.replace(/^.*[\\\/]/, '');
   return filename;
-}
-
-function isBuzzElement(element) {
-  if (element.children.length === 0) { //only leaf node
-    if (element.textContent.length > 0) { //must contain text
-      if (element.textContent === "<ding>") {
-        if (!element.hasAttribute("data-text")) { //attribute data-text show when typing,
-          return true;
-        }
-      }
-    }
-  }
-  return false;
-}
-
-function replaceBuzz(element) {
-  element.style.color = "red";
-  element.style.fontWeight = "bold";
-  element.textContent = "BUZZ!!!";
-}
-
-function tryBuzz() {
-  chrome.runtime.sendMessage({
-    type: "buzz",
-  }, function (response) {
-  });
 }
 
 const emoticons = [
