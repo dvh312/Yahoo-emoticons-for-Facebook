@@ -1,310 +1,257 @@
-const idleTime = 250;
-var timerId; //save the timerId to clear
-var isEnabled; //storageVariable
-var queue = []; //main queue to save works
-
-(function () {
-  refreshStorage();
-})();
-
-//FUNCTION + EVENTS
-
-/**
- * refresh storage variables (local in content script)
- * @return {[type]} [description]
- */
-function refreshStorage() {
-  chrome.storage.sync.get(function (items) {
-    isEnabled = items.isEnabled;
-    main();
-  });
-}
-
-function main() {
-  if (isEnabled) {
-    replace(getNeedElements(document.body)); //run once after document loaded
-    htmlChangedListener(); //add listener for HTML changed
-
-    //event call when these actions happen
-    document.addEventListener("wheel", function (e) {
-      resetTimer(idleTime);
+class Service {
+  constructor() {
+    this.checkEnabledStatus().then(isEnabled => {
+      if (isEnabled) {
+        this.filterElements(document);
+        this.addMutationObserver(this.mutationsHandler.bind(this));
+      }
     });
-    document.addEventListener("keydown", function (e) {
-      if (e.keyCode === 13) {
-        resetTimer(0);
+  }
+
+  /**
+   * DOM changed listener.
+   */
+  addMutationObserver(callback) {
+    MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
+
+    const observer = new MutationObserver(callback);
+    observer.observe(document, {
+      subtree: true,
+      childList: true,
+    });
+  }
+
+  checkEnabledStatus() {
+    return new Promise((resolve, reject) => {
+      chrome.storage.sync.get(items => resolve(!!items.isEnabled));
+    });
+  }
+
+  filterElements(origin) {
+    // Some added nodes are text.
+    if (!origin.querySelectorAll) {
+      return;
+    }
+
+    // Messenger
+    this.replace(origin.querySelectorAll('._3oh-._58nk, ._3oh-._58nk > span'));
+
+    // Facebook
+    this.replace(origin.querySelectorAll('._5yl5 > span, ._5yl5 > span > span')); // Chat popup.
+    this.replace(origin.querySelectorAll('.UFICommentBody > span')); // Comments.
+    this.replace(origin.querySelectorAll('div._5_jv._58jw > p')); // Posts.
+    this.replace(origin.querySelectorAll('img._1ift.img:not(._1lih)')); // Emoticons images (excluded picking table).
+    this.replace(origin.querySelectorAll('span._47e3._5mfr, span._47e3._5mfr > img')); // Emoticons on posts.
+  }
+
+  getFilename(fullPath) {
+    var filename = fullPath.replace(/^.*[\\\/]/, '');
+    return filename;
+  }
+
+  getImgHtml(src) {
+    return "<img src=\"" + chrome.extension.getURL(src) + "\" style=\"vertical-align: middle; height: auto; width: auto;\">";
+  }
+
+  mutationsHandler(mutations, observer) {
+    for (const mutation of mutations) {
+      for (const addedNode of mutation.addedNodes) {
+        this.filterElements(addedNode);
+      }
+    }
+  }
+
+  /**
+   * replace
+   * @param  {elements array} x focused elements
+   * @return {void}   N/A
+   */
+  replace(x) {
+    for (let i = 0; i < x.length; i++) {
+      if (x[i].tagName === "IMG") {
+        this.replaceImg(x[i]);
+      } else if (x[i].classList.contains("_47e3")) {
+        // this.replaceCommentsEmo(x[i]);
       } else {
-        resetTimer(idleTime);
-      }
-    });
-    document.addEventListener("mousedown", function (e) {
-      resetTimer(0);
-    });
-  }
-}
-
-function resetTimer(t) {
-  clearTimeout(timerId);
-  timerId = setTimeout(function () {
-    doWork();
-  }, t);
-}
-
-/**
- * do one work in the queue
- * @return {void} n/a
- */
-function doWork() {
-  if (queue.length > 0) {
-    var addedNode = queue.pop();
-    if (addedNode.nodeType === 1) { //element node
-      replace(getNeedElements(addedNode));
-    }
-    resetTimer(0); //avoid freezing the browser
-  }
-}
-
-/**
- * applied html listener, add changes to the queue
- * @return {void} n/a
- */
-function htmlChangedListener() {
-  //HTML changed eventListener
-  MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
-
-  var observer = new MutationObserver(function (mutations, observer) {
-    // fired when a mutation occurs
-    mutations.forEach(function (mutation) {
-      queue.push.apply(queue, mutation.addedNodes);
-    });
-    resetTimer(idleTime);
-  });
-
-  // define what element should be observed by the observer
-  // and what types of mutations trigger the callback
-  observer.observe(document, {
-    subtree: true,
-    childList: true,
-  });
-}
-
-/**
- * get elements with needed tag in the changed html
- * @param  {element} x htmlElement
- * @return {array}   all focused elements
- */
-function getNeedElements(x) {
-  var allElements = [];
-  //chat popup
-  allElements.push.apply(allElements, x.querySelectorAll("._5yl5 span"));
-  //comments
-  allElements.push.apply(allElements, x.querySelectorAll(".UFICommentBody span"));
-  //posts
-  allElements.push.apply(allElements, x.querySelectorAll("._5pbx p"));
-  //MESSENGER.COM
-  allElements.push.apply(allElements, x.querySelectorAll("._3oh-")); //only text
-  allElements.push.apply(allElements, x.querySelectorAll("._3oh- span")); //img inline
-  //all emoticons img
-  allElements.push.apply(allElements, x.querySelectorAll("._1ift"));
-  //all emotion on posts and comments
-  allElements.push.apply(allElements, x.querySelectorAll("._47e3"));
-  return allElements;
-}
-
-/**
- * replace
- * @param  {elements array} x focused elements
- * @return {void}   N/A
- */
-function replace(x) {
-  for (var i = 0; i < x.length; i++) {
-    if (x[i].tagName === "IMG") {
-      replaceImg(x[i]);
-    } else if (x[i].classList.contains("_47e3")) {
-      replaceCommentsEmo(x[i]);
-    } else {
-      replaceText(x[i]);
-    }
-  }
-}
-
-/**
- * replace facebook emoticon show in an img tag with title = keyCombination (ex: :-D)
- * @param  {DOMelement} x focused element
- * @return {void}   N/A
- */
-function replaceImg(element) {
-  var idx = srcToIndex(element.src);
-  if (idx !== null) {
-    if (!element.parentNode.hasAttribute("aria-label")) { //do not change in picking table
-      element.src = chrome.extension.getURL(emoticons[idx].src);
-      element.style.height = "auto";
-      element.style.width = "auto";
-    }
-  }
-}
-
-/**
- * given the original source of the image, check if the filename in that source
- * matchs with any emoticon fbImgFilename in the dictionary
- * @param  {string} src the source of the image
- * @return {int}     index of the emoticons in the dict, otherwise return null
- */
-function srcToIndex(src) {
-  var filename = getFilename(src);
-
-  //only the first 25 emo may be replaced by facebook img
-  for (var i = 0; i < 25; i++) {
-    if (emoticons[i].fbImgFilename !== undefined) {
-      if (emoticons[i].fbImgFilename === filename) {
-        return i;
+        this.replaceText(x[i]);
       }
     }
   }
-  return null;
-}
 
-function replaceCommentsEmo(element) {
-  var idx = titleToIndex(element.title);
-  if (idx !== null) {
-    if (idx === 0) { //smile emoticon :)
-      if (element.nextSibling !== null) {
-        if (element.nextSibling.nodeType === 3) {
-          if (element.nextSibling.textContent[0] === ')') {
-            element.removeAttribute("title");
-            element.innerHTML = getImgHtml(emoticons[20].src); //replace with :)) emo
-            element.nextSibling.textContent = element.nextSibling.textContent.substr(1);
-            return;
-          }
-        }
-      }
-    }
-    element.innerHTML = getImgHtml(emoticons[idx].src);
-  }
-}
-
-function titleToIndex(title) {
-  //only the first 25 emo may be replaced by facebook emo in comments
-  for (var i = 0; i < 25; i++) {
-    if (emoticons[i].title !== undefined) {
-      if (emoticons[i].title === title) {
-        return i;
-      }
-    }
-  }
-  return null;
-}
-
-/**
- * replace keyCombination show as text to an img element
- * @param  {DOMelement} x focused element
- * @return {void}   N/A
- */
-function replaceText(element) {
-  if (valid(element)) {
-    for (var j = 0; j < element.childNodes.length; j++) {
-      //only process text child nodes
-      if (element.childNodes[j].nodeType === 3 && element.childNodes[j].textContent.length > 0) {
-        //initially, element have same content as text child node
-        var words = element.childNodes[j].textContent.split(' ');
-        var changed = false;
-        //search for matched yahoo key
-        for (var word = 0; word < words.length; word++) {
-          var stop = false; //only change one emoticon in each word
-          for (var k = emoticons.length - 1; k >= 0; k--) {
-            if (stop) break;
-            for (var w = 0; w < emoticons[k].keys.length; w++) {
-              if (stop) break;
-              //the emoticon need to be the prefix of the word
-              if (words[word].indexOf(emoticons[k].keys[w]) === 0) {
-                //only replace first instance
-                words[word] = words[word].replace(emoticons[k].keys[w], getImgHtml(emoticons[k].src));
-                changed = true;
-                stop = true;
-              }
+  replaceCommentsEmo(element) {
+    var idx = this.titleToIndex(element.title);
+    if (idx !== null) {
+      if (idx === 0) { //smile emoticon :)
+        if (element.nextSibling !== null) {
+          if (element.nextSibling.nodeType === 3) {
+            if (element.nextSibling.textContent[0] === ')') {
+              element.removeAttribute("title");
+              element.innerHTML = this.getImgHtml(emoticons[20].src); //replace with :)) emo
+              element.nextSibling.textContent = element.nextSibling.textContent.substr(1);
+              return;
             }
           }
         }
+      }
+      element.innerHTML = this.getImgHtml(emoticons[idx].src);
+    }
+  }
 
-        var newHTML = words.join(' ');
-        //replace text node by element node with updated yahoo emo
-        if (changed) {
-          //create new element, ready to replace the child node
-          var newElement = document.createElement("SPAN");
-          element.replaceChild(newElement, element.childNodes[j]);
+  /**
+   * replace facebook emoticon show in an img tag with title = keyCombination (ex: :-D)
+   * @param  {DOMelement} x focused element
+   * @return {void}   N/A
+   */
+  replaceImg(element) {
+    const idx = this.srcToIndex(element.src);
+    if (idx !== null) {
+      element.src = chrome.extension.getURL(emoticons[idx].src);
+      element.style.height = "auto";
+      element.style.width = "auto";
 
-          //replace temp span element with newHTML (text and img nodes)
-          element.childNodes[j].outerHTML = newHTML;
-          //Note: =)):))=)) still works because after updating the HTML,
-          //:))=)) textnode will be catched again by the listener, then =))
+      // In case :)) or =)) become <img of :)> and ), convert back to <img of :))>
+      if (idx === 0) { //smile emoticon :)
+        if (element.parentNode && element.parentNode.nextSibling !== null) {
+          if (element.parentNode.nextSibling.nodeType === 3) {
+            if (element.parentNode.nextSibling.textContent[0] === ')') {
+              element.src = chrome.extension.getURL(emoticons[20].src); //replace with :)) emo
+              element.parentNode.nextSibling.textContent = element.nextSibling.textContent.substr(1);
+            }
+          }
         }
       }
     }
   }
-}
 
-/**
- * check if the element is valid by some condition:
- * do not change while typing
- * do not change facebook alternate name
- * skip if element do not contain text
- * skip if there aren't any textNode in childNodes
- * @param  {DOMelement} element processing element
- * @return {boolean}         return if the element is in good condition or not
- */
-function valid(element) {
-  if (element.textContent.length > 0) { //have text in subtree
-    if (element.childNodes.length > element.children.length) { //contains text, comment nodes
-      if (!element.hasAttribute("data-text")) { //attribute data-text show when typing,
-        if (!element.classList.contains("alternate_name")) { //prevent change the alt name
-          return true;
+  /**
+   * replace keyCombination show as text to an img element
+   * @param  {DOMelement} x focused element
+   * @return {void}   N/A
+   */
+  replaceText(element) {
+    if (this.valid(element)) {
+      for (var j = 0; j < element.childNodes.length; j++) {
+        //only process text child nodes
+        if (element.childNodes[j].nodeType === 3 && element.childNodes[j].textContent.length > 0) {
+          //initially, element have same content as text child node
+          var words = element.childNodes[j].textContent.split(' ');
+          var changed = false;
+          //search for matched yahoo key
+          for (var word = 0; word < words.length; word++) {
+            var stop = false; //only change one emoticon in each word
+            for (var k = emoticons.length - 1; k >= 0; k--) {
+              if (stop) break;
+              for (var w = 0; w < emoticons[k].patterns.length; w++) {
+                if (stop) break;
+                //the emoticon need to be the prefix of the word
+                if (words[word].indexOf(emoticons[k].patterns[w]) === 0) {
+                  //only replace first instance
+                  words[word] = words[word].replace(emoticons[k].patterns[w], this.getImgHtml(emoticons[k].src));
+                  changed = true;
+                  stop = true;
+                }
+              }
+            }
+          }
+
+          var newHTML = words.join(' ');
+          //replace text node by element node with updated yahoo emo
+          if (changed) {
+            //create new element, ready to replace the child node
+            var newElement = document.createElement("SPAN");
+            element.replaceChild(newElement, element.childNodes[j]);
+
+            //replace temp span element with newHTML (text and img nodes)
+            element.childNodes[j].outerHTML = newHTML;
+            //Note: =)):))=)) still works because after updating the HTML,
+            //:))=)) textnode will be catched again by the listener, then =))
+          }
         }
       }
     }
   }
-  return false;
+
+  /**
+   * given the original source of the image, check if the filename in that source
+   * matchs with any emoticon fbImgFilename in the dictionary
+   * @param  {string} src the source of the image
+   * @return {int}     index of the emoticons in the dict, otherwise return null
+   */
+  srcToIndex(src) {
+    var filename = this.getFilename(src);
+    //only the first 40 emo may be replaced by facebook img
+    for (var i = 0; i < 40; i++) {
+      if (emoticons[i].fbImgFilename && emoticons[i].fbImgFilename.includes(filename)) {
+        return i;
+      }
+    }
+    return null;
+  }
+
+  titleToIndex(title) {
+    //only the first 25 emo may be replaced by facebook emo in comments
+    for (var i = 0; i < 25; i++) {
+      if (emoticons[i].title !== undefined) {
+        if (emoticons[i].title === title) {
+          return i;
+        }
+      }
+    }
+    return null;
+  }
+
+  /**
+   * check if the element is valid by some condition:
+   * do not change while typing
+   * do not change facebook alternate name
+   * skip if element do not contain text
+   * skip if there aren't any textNode in childNodes
+   * @param  {DOMelement} element processing element
+   * @return {boolean}         return if the element is in good condition or not
+   */
+  valid(element) {
+    if (element.textContent.length > 0) { //have text in subtree
+      if (element.childNodes.length > element.children.length) { //contains text, comment nodes
+        if (!element.hasAttribute("data-text")) { //attribute data-text show when typing,
+          if (!element.classList.contains("alternate_name")) { //prevent change the alt name
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  }
 }
 
-function getImgHtml(src) {
-  return "<img src=\"" + chrome.extension.getURL(src) + "\" style=\"vertical-align: middle; height: auto; width: auto;\">";
-}
-
-function getFilename(fullPath) {
-  var filename = fullPath.replace(/^.*[\\\/]/, '');
-  return filename;
-}
-
+const service = new Service();
 const emoticons = [
   {
-    "fbImgFilename": "1f642.png",
-    "title": "smile emoticon",
-    "keys": [
+    "fbImgFilename": ["1f642.png"],
+    "patterns": [
       ":)",
       ":-)"
     ],
     "src": "images/YahooEmoticons/1.gif"
   },
   {
-    "fbImgFilename": "1f61e.png",
-    "title": "frown emoticon",
-    "keys": [
+    "fbImgFilename": ["1f641.png", "1f61e.png"],
+    "patterns": [
       ":(",
       ":-("
     ],
     "src": "images/YahooEmoticons/2.gif"
   },
   {
-    "fbImgFilename": "1f609.png",
-    "title": "wink emoticon",
-    "keys": [
+    "fbImgFilename": ["1f609.png"],
+    "patterns": [
       ";)",
       ";-)"
     ],
     "src": "images/YahooEmoticons/3.gif"
   },
   {
-    "fbImgFilename": "1f600.png",
-    "title": "grin emoticon",
-    "keys": [
+    "fbImgFilename": ["1f600.png", "1f603.png"],
+    "patterns": [
       ":D",
       ":d",
       ":-d",
@@ -313,29 +260,28 @@ const emoticons = [
     "src": "images/YahooEmoticons/4.gif"
   },
   {
-    "keys": [
+    "patterns": [
       ";;)"
     ],
     "src": "images/YahooEmoticons/5.gif"
   },
   {
-    "keys": [
+    "patterns": [
       ">:D<",
       ">:d<"
     ],
     "src": "images/YahooEmoticons/6.gif"
   },
   {
-    "fbImgFilename": "1f615.png",
-    "title": "unsure emoticon",
-    "keys": [
+    "fbImgFilename": ["1f615.png"],
+    "patterns": [
       ":-/",
       ":-\\"
     ],
     "src": "images/YahooEmoticons/7.gif"
   },
   {
-    "keys": [
+    "patterns": [
       ":x",
       ":X",
       ":-x",
@@ -344,16 +290,15 @@ const emoticons = [
     "src": "images/YahooEmoticons/8.gif"
   },
   {
-    "keys": [
+    "patterns": [
       ":\">",
       ":$"
     ],
     "src": "images/YahooEmoticons/9.gif"
   },
   {
-    "fbImgFilename": "1f61b.png",
-    "title": "tongue emoticon",
-    "keys": [
+    "fbImgFilename": ["1f61b.png"],
+    "patterns": [
       ":P",
       ":p",
       ":-p",
@@ -362,24 +307,22 @@ const emoticons = [
     "src": "images/YahooEmoticons/10.gif"
   },
   {
-    "fbImgFilename": "1f617.png",
-    "title": "kiss emoticon",
-    "keys": [
+    "fbImgFilename": ["1f617.png", "1f618.png"],
+    "patterns": [
       ":-*",
       ":*"
     ],
     "src": "images/YahooEmoticons/11.gif"
   },
   {
-    "keys": [
+    "patterns": [
       "=(("
     ],
     "src": "images/YahooEmoticons/12.gif"
   },
   {
-    "fbImgFilename": "1f62e.png",
-    "title": "gasp emoticon",
-    "keys": [
+    "fbImgFilename": ["1f62e.png"],
+    "patterns": [
       ":-O",
       ":-o",
       ":o",
@@ -388,9 +331,8 @@ const emoticons = [
     "src": "images/YahooEmoticons/13.gif"
   },
   {
-    "fbImgFilename": "1f621.png",
-    "title": "upset emoticon",
-    "keys": [
+    "fbImgFilename": ["1f621.png"],
+    "patterns": [
       "X(",
       "x(",
       "x-(",
@@ -400,16 +342,15 @@ const emoticons = [
     "src": "images/YahooEmoticons/14.gif"
   },
   {
-    "keys": [
+    "patterns": [
       ":>",
       ":->"
     ],
     "src": "images/YahooEmoticons/15.gif"
   },
   {
-    "fbImgFilename": "1f60e.png",
-    "title": "glasses emoticon",
-    "keys": [
+    "fbImgFilename": ["1f913.png", "1f60e.png"],
+    "patterns": [
       "B-)",
       "b-)",
       "b)",
@@ -418,7 +359,7 @@ const emoticons = [
     "src": "images/YahooEmoticons/16.gif"
   },
   {
-    "keys": [
+    "patterns": [
       ":-S",
       ":-s",
       ":s",
@@ -427,57 +368,56 @@ const emoticons = [
     "src": "images/YahooEmoticons/17.gif"
   },
   {
-    "keys": [
+    "patterns": [
       "#:-S",
       "#:-s"
     ],
     "src": "images/YahooEmoticons/18.gif"
   },
   {
-    "keys": [
+    "patterns": [
       ">:)"
     ],
     "src": "images/YahooEmoticons/19.gif"
   },
   {
-    "keys": [
+    "patterns": [
       ":((",
       ":-(("
     ],
     "src": "images/YahooEmoticons/20.gif"
   },
   {
-    "keys": [
+    "patterns": [
       ":))",
       ":-))"
     ],
     "src": "images/YahooEmoticons/21.gif"
   },
   {
-    "fbImgFilename": "1f610.png",
-    "keys": [
+    "fbImgFilename": ["1f610.png"],
+    "patterns": [
       ":|",
       ":-|"
     ],
     "src": "images/YahooEmoticons/22.gif"
   },
   {
-    "keys": [
+    "patterns": [
       "/:)",
       "/:-)"
     ],
     "src": "images/YahooEmoticons/23.gif"
   },
   {
-    "keys": [
+    "patterns": [
       "=))"
     ],
     "src": "images/YahooEmoticons/24.gif"
   },
   {
-    "fbImgFilename": "1f607.png",
-    "title": "angel emoticon",
-    "keys": [
+    "fbImgFilename": ["1f607.png"],
+    "patterns": [
       "O:-)",
       "o:-)",
       "O:)",
@@ -486,7 +426,7 @@ const emoticons = [
     "src": "images/YahooEmoticons/25.gif"
   },
   {
-    "keys": [
+    "patterns": [
       ":-B",
       ":-b",
       ":b",
@@ -495,589 +435,590 @@ const emoticons = [
     "src": "images/YahooEmoticons/26.gif"
   },
   {
-    "keys": [
+    "patterns": [
       "=;"
     ],
     "src": "images/YahooEmoticons/27.gif"
   },
   {
-    "keys": [
+    "patterns": [
       "I-)",
       "i-)"
     ],
     "src": "images/YahooEmoticons/28.gif"
   },
   {
-    "keys": [
+    "patterns": [
       "8-|"
     ],
     "src": "images/YahooEmoticons/29.gif"
   },
   {
-    "keys": [
+    "patterns": [
       "L-)",
       "l-)"
     ],
     "src": "images/YahooEmoticons/30.gif"
   },
   {
-    "keys": [
+    "patterns": [
       ":-&"
     ],
     "src": "images/YahooEmoticons/31.gif"
   },
   {
-    "keys": [
+    "patterns": [
       ":-$"
     ],
     "src": "images/YahooEmoticons/32.gif"
   },
   {
-    "keys": [
+    "patterns": [
       "[-("
     ],
     "src": "images/YahooEmoticons/33.gif"
   },
   {
-    "keys": [
+    "patterns": [
       ":O)",
       ":o)"
     ],
     "src": "images/YahooEmoticons/34.gif"
   },
   {
-    "keys": [
+    "patterns": [
       "8-}"
     ],
     "src": "images/YahooEmoticons/35.gif"
   },
   {
-    "keys": [
+    "patterns": [
       "<:-P",
       "<:-p"
     ],
     "src": "images/YahooEmoticons/36.gif"
   },
   {
-    "keys": [
+    "patterns": [
       "(:|"
     ],
     "src": "images/YahooEmoticons/37.gif"
   },
   {
-    "keys": [
+    "patterns": [
       "=P~",
       "=p~"
     ],
     "src": "images/YahooEmoticons/38.gif"
   },
   {
-    "keys": [
+    "fbImgFilename": ["1f914.png"],
+    "patterns": [
       ":-?"
     ],
     "src": "images/YahooEmoticons/39.gif"
   },
   {
-    "keys": [
+    "patterns": [
       "#-o",
       "#-O"
     ],
     "src": "images/YahooEmoticons/40.gif"
   },
   {
-    "keys": [
+    "patterns": [
       "=D>",
       "=d>"
     ],
     "src": "images/YahooEmoticons/41.gif"
   },
   {
-    "keys": [
+    "patterns": [
       ":-SS",
       ":-ss"
     ],
     "src": "images/YahooEmoticons/42.gif"
   },
   {
-    "keys": [
+    "patterns": [
       "@-)"
     ],
     "src": "images/YahooEmoticons/43.gif"
   },
   {
-    "keys": [
+    "patterns": [
       ":^o",
       ":^O"
     ],
     "src": "images/YahooEmoticons/44.gif"
   },
   {
-    "keys": [
+    "patterns": [
       ":-w",
       ":-W"
     ],
     "src": "images/YahooEmoticons/45.gif"
   },
   {
-    "keys": [
+    "patterns": [
       ":-<"
     ],
     "src": "images/YahooEmoticons/46.gif"
   },
   {
-    "keys": [
+    "patterns": [
       ">:P",
       ">:p"
     ],
     "src": "images/YahooEmoticons/47.gif"
   },
   {
-    "keys": [
+    "patterns": [
       "<):)"
     ],
     "src": "images/YahooEmoticons/48.gif"
   },
   {
-    "keys": [
+    "patterns": [
       ":@)"
     ],
     "src": "images/YahooEmoticons/49.gif"
   },
   {
-    "keys": [
+    "patterns": [
       "3:-O",
       "3:-o"
     ],
     "src": "images/YahooEmoticons/50.gif"
   },
   {
-    "keys": [
+    "patterns": [
       ":(|)"
     ],
     "src": "images/YahooEmoticons/51.gif"
   },
   {
-    "keys": [
+    "patterns": [
       "~:>"
     ],
     "src": "images/YahooEmoticons/52.gif"
   },
   {
-    "keys": [
+    "patterns": [
       "@};-"
     ],
     "src": "images/YahooEmoticons/53.gif"
   },
   {
-    "keys": [
+    "patterns": [
       "%%-"
     ],
     "src": "images/YahooEmoticons/54.gif"
   },
   {
-    "keys": [
+    "patterns": [
       "**=="
     ],
     "src": "images/YahooEmoticons/55.gif"
   },
   {
-    "keys": [
+    "patterns": [
       "(~~)"
     ],
     "src": "images/YahooEmoticons/56.gif"
   },
   {
-    "keys": [
+    "patterns": [
       "~O)",
       "~o)"
     ],
     "src": "images/YahooEmoticons/57.gif"
   },
   {
-    "keys": [
+    "patterns": [
       "*-:)"
     ],
     "src": "images/YahooEmoticons/58.gif"
   },
   {
-    "keys": [
+    "patterns": [
       "8-X",
       "8-x"
     ],
     "src": "images/YahooEmoticons/59.gif"
   },
   {
-    "keys": [
+    "patterns": [
       "=:)"
     ],
     "src": "images/YahooEmoticons/60.gif"
   },
   {
-    "keys": [
+    "patterns": [
       ">-)"
     ],
     "src": "images/YahooEmoticons/61.gif"
   },
   {
-    "keys": [
+    "patterns": [
       ":-L",
       ":-l"
     ],
     "src": "images/YahooEmoticons/62.gif"
   },
   {
-    "keys": [
+    "patterns": [
       "[-O<",
       "[-o<"
     ],
     "src": "images/YahooEmoticons/63.gif"
   },
   {
-    "keys": [
+    "patterns": [
       "$-)"
     ],
     "src": "images/YahooEmoticons/64.gif"
   },
   {
-    "keys": [
+    "patterns": [
       ":-\""
     ],
     "src": "images/YahooEmoticons/65.gif"
   },
   {
-    "keys": [
+    "patterns": [
       "b-(",
       "B-("
     ],
     "src": "images/YahooEmoticons/66.gif"
   },
   {
-    "keys": [
+    "patterns": [
       ":)>-"
     ],
     "src": "images/YahooEmoticons/67.gif"
   },
   {
-    "keys": [
+    "patterns": [
       "[-X",
       "[-x"
     ],
     "src": "images/YahooEmoticons/68.gif"
   },
   {
-    "keys": [
+    "patterns": [
       "\\:D/",
       "\\:d/"
     ],
     "src": "images/YahooEmoticons/69.gif"
   },
   {
-    "keys": [
+    "patterns": [
       ">:/"
     ],
     "src": "images/YahooEmoticons/70.gif"
   },
   {
-    "keys": [
+    "patterns": [
       ";))"
     ],
     "src": "images/YahooEmoticons/71.gif"
   },
   {
-    "keys": [
+    "patterns": [
       "o->",
       "O->"
     ],
     "src": "images/YahooEmoticons/72.gif"
   },
   {
-    "keys": [
+    "patterns": [
       "o=>",
       "O=>"
     ],
     "src": "images/YahooEmoticons/73.gif"
   },
   {
-    "keys": [
+    "patterns": [
       "o-+",
       "O-+"
     ],
     "src": "images/YahooEmoticons/74.gif"
   },
   {
-    "keys": [
+    "patterns": [
       "(%)"
     ],
     "src": "images/YahooEmoticons/75.gif"
   },
   {
-    "keys": [
+    "patterns": [
       ":-@"
     ],
     "src": "images/YahooEmoticons/76.gif"
   },
   {
-    "keys": [
+    "patterns": [
       "^:)^"
     ],
     "src": "images/YahooEmoticons/77.gif"
   },
   {
-    "keys": [
+    "patterns": [
       ":-j",
       ":-J"
     ],
     "src": "images/YahooEmoticons/78.gif"
   },
   {
-    "keys": [
+    "patterns": [
       "(*)"
     ],
     "src": "images/YahooEmoticons/79.gif"
   },
   {
-    "keys": [
+    "patterns": [
       ":)]"
     ],
     "src": "images/YahooEmoticons/100.gif"
   },
   {
-    "keys": [
+    "patterns": [
       ":-c",
       ":-C"
     ],
     "src": "images/YahooEmoticons/101.gif"
   },
   {
-    "keys": [
+    "patterns": [
       "~X(",
       "~x("
     ],
     "src": "images/YahooEmoticons/102.gif"
   },
   {
-    "keys": [
+    "patterns": [
       ":-h",
       ":-H"
     ],
     "src": "images/YahooEmoticons/103.gif"
   },
   {
-    "keys": [
+    "patterns": [
       ":-t",
       ":-T"
     ],
     "src": "images/YahooEmoticons/104.gif"
   },
   {
-    "keys": [
+    "patterns": [
       "8->"
     ],
     "src": "images/YahooEmoticons/105.gif"
   },
   {
-    "keys": [
+    "patterns": [
       ":-??"
     ],
     "src": "images/YahooEmoticons/106.gif"
   },
   {
-    "keys": [
+    "patterns": [
       "%-("
     ],
     "src": "images/YahooEmoticons/107.gif"
   },
   {
-    "keys": [
+    "patterns": [
       ":o3",
       ":O3"
     ],
     "src": "images/YahooEmoticons/108.gif"
   },
   {
-    "keys": [
+    "patterns": [
       "X_X",
       "x_x"
     ],
     "src": "images/YahooEmoticons/109.gif"
   },
   {
-    "keys": [
+    "patterns": [
       ":!!"
     ],
     "src": "images/YahooEmoticons/110.gif"
   },
   {
-    "keys": [
+    "patterns": [
       "\\m/",
       "\\M/"
     ],
     "src": "images/YahooEmoticons/111.gif"
   },
   {
-    "keys": [
+    "patterns": [
       ":-q",
       ":-Q"
     ],
     "src": "images/YahooEmoticons/112.gif"
   },
   {
-    "keys": [
+    "patterns": [
       ":-bd",
       ":-BD"
     ],
     "src": "images/YahooEmoticons/113.gif"
   },
   {
-    "keys": [
+    "patterns": [
       "^#(^"
     ],
     "src": "images/YahooEmoticons/114.gif"
   },
   {
-    "keys": [
+    "patterns": [
       ":bz",
       ":BZ"
     ],
     "src": "images/YahooEmoticons/115.gif"
   },
   {
-    "keys": [
+    "patterns": [
       "~^o^~",
       "~^O^~"
     ],
     "src": "images/YahooEmoticons/116.gif"
   },
   {
-    "keys": [
+    "patterns": [
       "'@^@|||"
     ],
     "src": "images/YahooEmoticons/117.gif"
   },
   {
-    "keys": [
+    "patterns": [
       "[]---"
     ],
     "src": "images/YahooEmoticons/118.gif"
   },
   {
-    "keys": [
+    "patterns": [
       "^o^||3",
       "^O^||3"
     ],
     "src": "images/YahooEmoticons/119.gif"
   },
   {
-    "keys": [
+    "patterns": [
       ":-(||>"
     ],
     "src": "images/YahooEmoticons/120.gif"
   },
   {
-    "keys": [
+    "patterns": [
       "'+_+"
     ],
     "src": "images/YahooEmoticons/121.gif"
   },
   {
-    "keys": [
+    "patterns": [
       ":::^^:::"
     ],
     "src": "images/YahooEmoticons/122.gif"
   },
   {
-    "keys": [
+    "patterns": [
       "o|^_^|o",
       "O|^_^|O"
     ],
     "src": "images/YahooEmoticons/123.gif"
   },
   {
-    "keys": [
+    "patterns": [
       ":puke!",
       ":PUKE!"
     ],
     "src": "images/YahooEmoticons/124.gif"
   },
   {
-    "keys": [
+    "patterns": [
       "o|\\~",
       "O|\\~"
     ],
     "src": "images/YahooEmoticons/125.gif"
   },
   {
-    "keys": [
+    "patterns": [
       "o|:-)",
       "O|:-)"
     ],
     "src": "images/YahooEmoticons/126.gif"
   },
   {
-    "keys": [
+    "patterns": [
       ":(fight)",
       ":(FIGHT)"
     ],
     "src": "images/YahooEmoticons/127.gif"
   },
   {
-    "keys": [
+    "patterns": [
       "%*-{"
     ],
     "src": "images/YahooEmoticons/128.gif"
   },
   {
-    "keys": [
+    "patterns": [
       "%||:-{"
     ],
     "src": "images/YahooEmoticons/129.gif"
   },
   {
-    "keys": [
+    "patterns": [
       "&[]"
     ],
     "src": "images/YahooEmoticons/130.gif"
   },
   {
-    "keys": [
+    "patterns": [
       ":(tv)",
       ":(TV)"
     ],
     "src": "images/YahooEmoticons/131.gif"
   },
   {
-    "keys": [
+    "patterns": [
       "?@_@?"
     ],
     "src": "images/YahooEmoticons/132.gif"
   },
   {
-    "keys": [
+    "patterns": [
       ":->~~"
     ],
     "src": "images/YahooEmoticons/133.gif"
   },
   {
-    "keys": [
+    "patterns": [
       "'@-@"
     ],
     "src": "images/YahooEmoticons/134.gif"
   },
   {
-    "keys": [
+    "patterns": [
       ":(game)",
       ":(GAME)"
     ],
     "src": "images/YahooEmoticons/135.gif"
   },
   {
-    "keys": [
+    "patterns": [
       ":-)/\\:-)"
     ],
     "src": "images/YahooEmoticons/136.gif"
   },
   {
-    "keys": [
+    "patterns": [
       "[]==[]"
     ],
     "src": "images/YahooEmoticons/137.gif"

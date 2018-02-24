@@ -9,7 +9,7 @@ class BackgroundManager {
   reloadTabs() {
     chrome.tabs.query({
       url: ['https://www.facebook.com/*', 'https://www.messenger.com/*']
-    }, (tabs) => {
+    }, tabs => {
       for (const tab of tabs) {
         chrome.tabs.reload(tab.id);
       }
@@ -32,7 +32,7 @@ class BackgroundManager {
    * Toggle button - Enable/Disable the extension
    */
   addToggleListener() {
-    chrome.browserAction.onClicked.addListener((tab) => {
+    chrome.browserAction.onClicked.addListener(tab => {
       this.isEnabled = !this.isEnabled;
       this.refreshIcon();
       chrome.storage.sync.set({
@@ -44,9 +44,9 @@ class BackgroundManager {
   }
 
   initStorage() {
-    chrome.storage.sync.get((items) => {
-      if (items.isEnabled !== undefined) {
-        this.isEnabled = items.isEnabled;
+    chrome.storage.sync.get(items => {
+      if (items.checkEnabledStatus !== undefined) {
+        this.isEnabled = items.checkEnabledStatus;
         this.reloadTabs();
         this.refreshIcon();
       } else {
