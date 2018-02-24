@@ -4,6 +4,7 @@ class Service {
       if (isEnabled) {
         this.filterElements(document);
         this.addMutationObserver(this.mutationsHandler.bind(this));
+        this.addYahooEmoticonPickerButton();
       }
     });
   }
@@ -19,6 +20,10 @@ class Service {
       subtree: true,
       childList: true,
     });
+  }
+
+  addYahooEmoticonPickerButton() {
+
   }
 
   checkEnabledStatus() {
@@ -43,7 +48,7 @@ class Service {
     this.replace(origin.querySelectorAll('span._47e3._5mfr > img')); // Emoticons in posts and comments.
 
     // Both
-    this.replace(origin.querySelectorAll('img._1ift.img:not(._1lih):not(._2560)')); // Emoticons images (excluded picking table).
+    this.replace(origin.querySelectorAll('img._1ift.img:not(._1lih)')); // Emoticons images (excluded picking table).
   }
 
   getFilename(fullPath) {
@@ -84,6 +89,11 @@ class Service {
    * @return {void}   N/A
    */
   replaceImg(element) {
+    // Ignore icon on picking table.
+    if (element.parentNode.className.includes('_1uwx')) {
+      return;
+    }
+
     const idx = this.srcToIndex(element.src);
     if (idx !== null) {
       element.src = chrome.extension.getURL(emoticons[idx].src);
