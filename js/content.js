@@ -70,30 +70,9 @@ class Service {
     for (let i = 0; i < x.length; i++) {
       if (x[i].tagName === "IMG") {
         this.replaceImg(x[i]);
-      } else if (x[i].classList.contains("_47e3")) {
-        // this.replaceCommentsEmo(x[i]);
       } else {
         this.replaceText(x[i]);
       }
-    }
-  }
-
-  replaceCommentsEmo(element) {
-    var idx = this.titleToIndex(element.title);
-    if (idx !== null) {
-      if (idx === 0) { //smile emoticon :)
-        if (element.nextSibling !== null) {
-          if (element.nextSibling.nodeType === 3) {
-            if (element.nextSibling.textContent[0] === ')') {
-              element.removeAttribute("title");
-              element.innerHTML = this.getImgHtml(emoticons[20].src); //replace with :)) emo
-              element.nextSibling.textContent = element.nextSibling.textContent.substr(1);
-              return;
-            }
-          }
-        }
-      }
-      element.innerHTML = this.getImgHtml(emoticons[idx].src);
     }
   }
 
