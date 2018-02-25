@@ -5,6 +5,12 @@ Download link: https://chrome.google.com/webstore/detail/yahoo-emoticons-for-fac
 
 Show Yahoo Emoticons for Facebook and Messenger.
 
+Version 2.0.0
+- Added a picking table for emoticons.
+- Improved performance.
+- Changed icons.
+- Removed Buzz feature.
+
 Version 1.8.14
 - Remove out-of-date code in old FB.com UI (inbox popup)
 
@@ -160,7 +166,7 @@ Version 1.5.4
 Version 1.5.3
 - Do not need 'tabs' permission
 - Change some function name
-- Clean up replace.js comments
+- Clean up content.js comments
 
 Version 1.5.2
 - Tweak for longer battery life

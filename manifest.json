@@ -1,33 +1,35 @@
 {
   "manifest_version": 2,
-
   "name": "Yahoo emoticons for Facebook",
-  "description": "Change text into Yahoo! Messenger emoticons",
-  "version": "1.8.14",
-
+  "version": "2.0.0",
+  "description": "Yahoo! Messenger emoticons for Facebook and Messenger.",
+  "icons": {
+    "16": "images/icon16.png",
+    "48": "images/icon48.png",
+    "128": "images/icon128.png"
+  },
   "background": {
-    "scripts": ["js/background.js"]
+    "scripts": [
+      "js/background.js"
+    ]
   },
-
   "browser_action": {
-    "default_icon": "images/icon.png"
+    "default_icon": "images/icon38.png"
   },
-
   "content_scripts": [
     {
-      "matches": ["https://www.facebook.com/*", "https://www.messenger.com/*"],
-      "js": ["js/jquery-3.0.0.min.js", "js/replace.js"]
+      "matches": [
+        "https://www.facebook.com/*",
+        "https://www.messenger.com/*"
+      ],
+      "js": [
+        "js/content.js"
+      ]
     }
   ],
-
   "web_accessible_resources": [
-    "images/YahooEmoticons/*"
+    "images/*"
   ],
-
-  "icons": { "16": "images/icon16.png",
-           "48": "images/icon48.png",
-          "128": "images/icon128.png" },
-
   "permissions": [
     "https://www.facebook.com/*",
     "https://www.messenger.com/*",
