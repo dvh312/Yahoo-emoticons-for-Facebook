@@ -5,6 +5,10 @@ Download link: https://chrome.google.com/webstore/detail/yahoo-emoticons-for-fac
 
 Show Yahoo Emoticons for Facebook and Messenger.
 
+Version 2.0.1
+- Supported shared posts and posts with background.
+- Added short name.
+
 Version 2.0.0
 - Added a picking table for emoticons.
 - Improved performance.

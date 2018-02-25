@@ -140,7 +140,9 @@ class Service {
 
     // Facebook
     this.replace(origin.querySelectorAll('span._5yl5 > span, span._5yl5 > span > span')); // Chat popup without/with FB emoticons.
-    this.replace(origin.querySelectorAll('div._5pbx.userContent._3576 > p, div._5pbx.userContent._3576 > div > p')); // Text in posts / shared posts.
+    this.replace(origin.querySelectorAll('div._5pbx.userContent._3576 > p, div._5pbx.userContent._3576 > div > p')); // Text in posts and with activity.
+    this.replace(origin.querySelectorAll('div.mtm._5pco > p, div.mtm._5pco > div > p')); // Text in shared posts.
+    this.replace(origin.querySelectorAll('span._4a6n')); // Text in special posts (big text and has background).
     this.replace(origin.querySelectorAll('span.UFICommentBody > span')); // Text in comments.
     this.replace(origin.querySelectorAll('span._47e3._5mfr > img')); // Emoticons in posts and comments.
 
