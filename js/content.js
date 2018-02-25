@@ -51,7 +51,7 @@ class Service {
     }
 
     const wrapper = document.createElement('div');
-    wrapper.innerHTML = '<div id="yahooButton" class="_1uwx" role="presentation" data-hover="tooltip" data-tooltip-content="Yahoo!"><img class="_2560 _1ift img" src="' + chrome.extension.getURL('images/icon16.png') + '" alt=""></div>';
+    wrapper.innerHTML = '<div id="yahooButton" class="_1uwx" role="presentation" data-hover="tooltip" data-tooltip-content="Yahoo!"><img class="_2560 _1ift img" src="' + chrome.extension.getURL('images/iconWithBackground256.png') + '" alt=""></div>';
 
     // Added onClicked handler and switching logic.
     const yahooButton = wrapper.children[0];
