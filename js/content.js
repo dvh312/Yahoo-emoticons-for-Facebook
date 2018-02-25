@@ -2,10 +2,28 @@ class Service {
   constructor() {
     this.checkEnabledStatus().then(isEnabled => {
       if (isEnabled) {
+        this.lastOpenedPopup = null;
+        this.popupCloseTimeout = null;
         this.filterElements(document);
         this.addMutationObserver(this.mutationsHandler.bind(this));
+        this.addStyleToHead(popupStyle);
       }
     });
+  }
+
+  // Ref: https://stackoverflow.com/questions/524696/how-to-create-a-style-tag-with-javascript
+  addStyleToHead(css) {
+    let head = document.head || document.getElementsByTagName('head')[0];
+    let style = document.createElement('style');
+
+    style.type = 'text/css';
+    if (style.styleSheet){
+      style.styleSheet.cssText = css;
+    } else {
+      style.appendChild(document.createTextNode(css));
+    }
+
+    head.appendChild(style);
   }
 
   /**
@@ -227,12 +245,89 @@ class Service {
         }
 
         // Add emoticon to the current row.
-        const emoticonHtml = '<td class="_3-sy _51m-"><div class=" _4rlu"><div aria-label="Pick an Emoji" role="button" tabindex="1" class=""><img class="_1lih _1ift _1ifu img" style="width: 32px; height: auto" src="' + chrome.extension.getURL(emoticons[i].src) + '" alt="" style="margin: 0px;"></div></div></td>';
-        currentRow.insertAdjacentHTML('beforeend', emoticonHtml);
+        const wrapper = document.createElement('tr');
+        wrapper.innerHTML = '<td class="_3-sy _51m- popup"><span class="popuptext">Copied!</span><div class=" _4rlu"><div aria-label="Pick an Emoji" role="button" tabindex="1" class=""><img class="_1lih _1ift _1ifu img" style="width: 32px; height: auto" src="' + chrome.extension.getURL(emoticons[i].src) + '" alt="" style="margin: 0px;"></div></div></td>';
+        wrapper.children[0].addEventListener('click', this.onYahooEmojiClicked.bind(this, wrapper.children[0], i));
+        currentRow.appendChild(wrapper.children[0]);
       }
     } else {
       table.style.display = null; // Show Yahoo table.
     }
+  }
+
+  onYahooEmojiClicked(emojiElement, emojiIndex) {
+    // Closed last popup if less than 1s.
+    if (this.lastOpenedPopup && this.lastOpenedPopup.classList.contains('show')) {
+      this.lastOpenedPopup.classList.remove('show');
+      this.lastOpenedPopup = null;
+    }
+
+    // Show popup and close after 1s
+    this.copyTextToClipboard(emoticons[emojiIndex].patterns[0]);
+    const popup = emojiElement.querySelector('span.popuptext');
+    popup.classList.add('show');
+    this.lastOpenedPopup = popup;
+    clearTimeout(this.popupCloseTimeout);
+    this.popupCloseTimeout = setTimeout(() => {
+      popup.classList.remove('show');
+    }, 1000);
+  }
+
+  copyTextToClipboard(text) {
+    var textArea = document.createElement('textarea');
+
+    //
+    // *** This styling is an extra step which is likely not required. ***
+    //
+    // Why is it here? To ensure:
+    // 1. the element is able to have focus and selection.
+    // 2. if element was to flash render it has minimal visual impact.
+    // 3. less flakyness with selection and copying which **might** occur if
+    //    the textarea element is not visible.
+    //
+    // The likelihood is the element won't even render, not even a flash,
+    // so some of these are just precautions. However in IE the element
+    // is visible whilst the popup box asking the user for permission for
+    // the web page to copy to the clipboard.
+    //
+
+    // Place in top-left corner of screen regardless of scroll position.
+    textArea.style.position = 'fixed';
+    textArea.style.top = 0;
+    textArea.style.left = 0;
+
+    // Ensure it has a small width and height. Setting to 1px / 1em
+    // doesn't work as this gives a negative w/h on some browsers.
+    textArea.style.width = '2em';
+    textArea.style.height = '2em';
+
+    // We don't need padding, reducing the size if it does flash render.
+    textArea.style.padding = 0;
+
+    // Clean up any borders.
+    textArea.style.border = 'none';
+    textArea.style.outline = 'none';
+    textArea.style.boxShadow = 'none';
+
+    // Avoid flash of white box if rendered for any reason.
+    textArea.style.background = 'transparent';
+
+
+    textArea.value = text;
+
+    document.body.appendChild(textArea);
+
+    textArea.select();
+
+    try {
+      let successful = document.execCommand('copy');
+      let msg = successful ? 'successful' : 'unsuccessful';
+      console.log('Copying text command was ' + msg);
+    } catch (err) {
+      console.log('Oops, unable to copy');
+    }
+
+    document.body.removeChild(textArea);
   }
 
   /**
@@ -276,6 +371,7 @@ class Service {
 }
 
 const service = new Service();
+const popupStyle = '.popup{position:relative;display:inline-block;cursor:pointer}.popup .popuptext{visibility:hidden;width:56px;background-color:#555;color:#fff;text-align:center;border-radius:6px;padding:8px 0;position:absolute;z-index:1;bottom:125%;left:50%;margin-left:-28px}.popup .popuptext::after{content:"";position:absolute;top:100%;left:50%;margin-left:-5px;border-width:5px;border-style:solid;border-color:#555 transparent transparent}.popup .show{visibility:visible;-webkit-animation:fadeIn 1s;animation:fadeIn 1s}@-webkit-keyframes fadeIn{from{opacity:0}to{opacity:1}}@keyframes fadeIn{from{opacity:0}to{opacity:1}}';
 const emoticons = [
   {
     "fbImgFilename": ["1f642.png"],
@@ -334,9 +430,9 @@ const emoticons = [
   },
   {
     "patterns": [
+      ":-x",
       ":x",
       ":X",
-      ":-x",
       ":-X"
     ],
     "src": "images/YahooEmoticons/8.gif"
