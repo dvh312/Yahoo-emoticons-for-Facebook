@@ -321,10 +321,11 @@ class Service {
 
     try {
       let successful = document.execCommand('copy');
-      let msg = successful ? 'successful' : 'unsuccessful';
-      console.log('Copying text command was ' + msg);
+      if (!successful) {
+        console.log('Copying text command was unsuccessful');
+      }
     } catch (err) {
-      console.log('Oops, unable to copy');
+      console.log(err);
     }
 
     document.body.removeChild(textArea);
