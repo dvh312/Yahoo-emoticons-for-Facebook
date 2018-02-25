@@ -9,6 +9,7 @@ Version 2.0.0
 - Added a picking table for emoticons.
 - Improved performance.
 - Changed icons.
+- Removed Buzz feature.
 
 Version 1.8.14
 - Remove out-of-date code in old FB.com UI (inbox popup)
