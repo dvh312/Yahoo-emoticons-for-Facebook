@@ -4,7 +4,6 @@ class Service {
       if (isEnabled) {
         this.filterElements(document);
         this.addMutationObserver(this.mutationsHandler.bind(this));
-        this.addYahooEmoticonPickerButton();
       }
     });
   }
@@ -45,59 +44,6 @@ class Service {
     categoryElement.appendChild(wrapper.children[0]);
   };
 
-  onYahooCategoryClicked(yahooButton) {
-    // Remove grey background on other button.
-    for (const button of yahooButton.parentNode.children) {
-      button.classList.remove('_1uwz');
-    }
-    yahooButton.classList.add('_1uwz'); // Add grey background on Yahoo button.
-    this.showYahooEmojiTable();
-  }
-
-  onOtherCategoryClicked(otherButton, yahooButton) {
-    this.hideYahooEmojiTable();
-    yahooButton.classList.remove('_1uwz'); // Remove grey background on Yahoo button.
-    otherButton.classList.add('_1uwz'); // Add grey background on the other button.
-  }
-
-  showYahooEmojiTable() {
-    document.querySelector('table._3-s_.uiGrid._51mz > tbody:not(#yahooTable)').style.display = 'none'; // Hide normal table.
-    let table = document.querySelector('#yahooTable');
-    if (!table) {
-      // Create Yahoo table if not exist.
-      table = document.createElement('tbody');
-      table.id = 'yahooTable';
-      document.querySelector('table._3-s_.uiGrid._51mz').appendChild(table);
-
-      // Populate emoji table.
-      let currentRow = null;
-      for (let i = 0; i < emoticons.length; i++) {
-        if (i % 6 === 0) {
-          // Create new row.
-          currentRow = document.createElement('tr');
-          currentRow.classList.add('_51mx');
-          table.appendChild(currentRow);
-        }
-
-        // Add emoticon to the current row.
-        const emoticonHtml = '<td class="_3-sy _51m-"><div class=" _4rlu"><div aria-label="Pick an Emoji" role="button" tabindex="1" class=""><img class="_1lih _1ift _1ifu img" style="width: 32px; height: auto" src="' + chrome.extension.getURL(emoticons[i].src) + '" alt="" style="margin: 0px;"></div></div></td>';
-        currentRow.insertAdjacentHTML('beforeend', emoticonHtml);
-      }
-    } else {
-      table.style.display = null; // Show Yahoo table.
-    }
-  }
-
-  hideYahooEmojiTable() {
-    document.querySelector('table._3-s_.uiGrid._51mz > tbody:not(#yahooTable)').style.display = null; // Show normal table.
-
-    // Hide Yahoo table.
-    const yahooTable = document.querySelector('#yahooTable');
-    if (yahooTable) {
-      yahooTable.style.display = 'none';
-    }
-  }
-
   checkEnabledStatus() {
     return new Promise((resolve, reject) => {
       chrome.storage.sync.get(items => resolve(!!items.isEnabled));
@@ -126,12 +72,22 @@ class Service {
   }
 
   getFilename(fullPath) {
-    var filename = fullPath.replace(/^.*[\\\/]/, '');
+    let filename = fullPath.replace(/^.*[\\\/]/, '');
     return filename;
   }
 
   getImgHtml(src) {
     return "<img src=\"" + chrome.extension.getURL(src) + "\" style=\"vertical-align: middle; height: auto; width: auto;\">";
+  }
+
+  hideYahooEmojiTable() {
+    document.querySelector('table._3-s_.uiGrid._51mz > tbody:not(#yahooTable)').style.display = null; // Show normal table.
+
+    // Hide Yahoo table.
+    const yahooTable = document.querySelector('#yahooTable');
+    if (yahooTable) {
+      yahooTable.style.display = 'none';
+    }
   }
 
   mutationsHandler(mutations, observer) {
@@ -140,6 +96,21 @@ class Service {
         this.filterElements(addedNode);
       }
     }
+  }
+
+  onOtherCategoryClicked(otherButton, yahooButton) {
+    this.hideYahooEmojiTable();
+    yahooButton.classList.remove('_1uwz'); // Remove grey background on Yahoo button.
+    otherButton.classList.add('_1uwz'); // Add grey background on the other button.
+  }
+
+  onYahooCategoryClicked(yahooButton) {
+    // Remove grey background on other button.
+    for (const button of yahooButton.parentNode.children) {
+      button.classList.remove('_1uwz');
+    }
+    yahooButton.classList.add('_1uwz'); // Add grey background on Yahoo button.
+    this.showYahooEmojiTable();
   }
 
   /**
@@ -195,18 +166,18 @@ class Service {
    */
   replaceText(element) {
     if (this.valid(element)) {
-      for (var j = 0; j < element.childNodes.length; j++) {
+      for (let j = 0; j < element.childNodes.length; j++) {
         //only process text child nodes
         if (element.childNodes[j].nodeType === 3 && element.childNodes[j].textContent.length > 0) {
           //initially, element have same content as text child node
-          var words = element.childNodes[j].textContent.split(' ');
-          var changed = false;
+          let words = element.childNodes[j].textContent.split(' ');
+          let changed = false;
           //search for matched yahoo key
-          for (var word = 0; word < words.length; word++) {
-            var stop = false; //only change one emoticon in each word
-            for (var k = emoticons.length - 1; k >= 0; k--) {
+          for (let word = 0; word < words.length; word++) {
+            let stop = false; //only change one emoticon in each word
+            for (let k = emoticons.length - 1; k >= 0; k--) {
               if (stop) break;
-              for (var w = 0; w < emoticons[k].patterns.length; w++) {
+              for (let w = 0; w < emoticons[k].patterns.length; w++) {
                 if (stop) break;
                 //the emoticon need to be the prefix of the word
                 if (words[word].indexOf(emoticons[k].patterns[w]) === 0) {
@@ -219,11 +190,11 @@ class Service {
             }
           }
 
-          var newHTML = words.join(' ');
+          let newHTML = words.join(' ');
           //replace text node by element node with updated yahoo emo
           if (changed) {
             //create new element, ready to replace the child node
-            var newElement = document.createElement("SPAN");
+            let newElement = document.createElement("SPAN");
             element.replaceChild(newElement, element.childNodes[j]);
 
             //replace temp span element with newHTML (text and img nodes)
@@ -236,6 +207,34 @@ class Service {
     }
   }
 
+  showYahooEmojiTable() {
+    document.querySelector('table._3-s_.uiGrid._51mz > tbody:not(#yahooTable)').style.display = 'none'; // Hide normal table.
+    let table = document.querySelector('#yahooTable');
+    if (!table) {
+      // Create Yahoo table if not exist.
+      table = document.createElement('tbody');
+      table.id = 'yahooTable';
+      document.querySelector('table._3-s_.uiGrid._51mz').appendChild(table);
+
+      // Populate emoji table.
+      let currentRow = null;
+      for (let i = 0; i < emoticons.length; i++) {
+        if (i % 6 === 0) {
+          // Create new row.
+          currentRow = document.createElement('tr');
+          currentRow.classList.add('_51mx');
+          table.appendChild(currentRow);
+        }
+
+        // Add emoticon to the current row.
+        const emoticonHtml = '<td class="_3-sy _51m-"><div class=" _4rlu"><div aria-label="Pick an Emoji" role="button" tabindex="1" class=""><img class="_1lih _1ift _1ifu img" style="width: 32px; height: auto" src="' + chrome.extension.getURL(emoticons[i].src) + '" alt="" style="margin: 0px;"></div></div></td>';
+        currentRow.insertAdjacentHTML('beforeend', emoticonHtml);
+      }
+    } else {
+      table.style.display = null; // Show Yahoo table.
+    }
+  }
+
   /**
    * given the original source of the image, check if the filename in that source
    * matchs with any emoticon fbImgFilename in the dictionary
@@ -243,23 +242,11 @@ class Service {
    * @return {int}     index of the emoticons in the dict, otherwise return null
    */
   srcToIndex(src) {
-    var filename = this.getFilename(src);
+    let filename = this.getFilename(src);
     //only the first 40 emo may be replaced by facebook img
-    for (var i = 0; i < 40; i++) {
+    for (let i = 0; i < 40; i++) {
       if (emoticons[i].fbImgFilename && emoticons[i].fbImgFilename.includes(filename)) {
         return i;
-      }
-    }
-    return null;
-  }
-
-  titleToIndex(title) {
-    //only the first 25 emo may be replaced by facebook emo in comments
-    for (var i = 0; i < 25; i++) {
-      if (emoticons[i].title !== undefined) {
-        if (emoticons[i].title === title) {
-          return i;
-        }
       }
     }
     return null;
