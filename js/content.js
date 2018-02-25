@@ -35,11 +35,11 @@ class Service {
     const wrapper = document.createElement('div');
     wrapper.innerHTML = '<div id="yahooButton" class="_1uwx" role="presentation" data-hover="tooltip" data-tooltip-content="Yahoo!"><img class="_2560 _1ift img" src="' + chrome.extension.getURL('images/icon16.png') + '" alt=""></div>';
 
-    // Added onClicked handler and switching grey background logic.
+    // Added onClicked handler and switching logic.
     const yahooButton = wrapper.children[0];
     yahooButton.onclick = this.onYahooCategoryClicked.bind(this, yahooButton);
     for (const button of categoryElement.children) {
-      button.addEventListener('click', () => yahooButton.classList.remove('_1uwz'));
+      button.addEventListener('click', this.onOtherCategoryClicked.bind(this, button, yahooButton));
     }
 
     categoryElement.appendChild(wrapper.children[0]);
@@ -51,6 +51,20 @@ class Service {
       button.classList.remove('_1uwz');
     }
     yahooButton.classList.add('_1uwz');
+
+    const table = document.querySelector('table._3-s_.uiGrid._51mz > tbody');
+    table.style.display = 'none';
+    this.showYahooEmojiTable();
+  }
+
+  onOtherCategoryClicked(otherButton, yahooButton) {
+    const table = document.querySelector('table._3-s_.uiGrid._51mz > tbody');
+    table.style.display = null;
+    yahooButton.classList.remove('_1uwz');
+  }
+
+  showYahooEmojiTable() {
+    // Code here.
   }
 
   checkEnabledStatus() {

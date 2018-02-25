@@ -23,6 +23,7 @@
         "https://www.messenger.com/*"
       ],
       "js": [
+        "js/jquery-3.3.1.min.js",
         "js/content.js"
       ]
     }
