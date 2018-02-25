@@ -46,25 +46,56 @@ class Service {
   };
 
   onYahooCategoryClicked(yahooButton) {
-    // Switch the grey background to Yahoo! button.
+    // Remove grey background on other button.
     for (const button of yahooButton.parentNode.children) {
       button.classList.remove('_1uwz');
     }
-    yahooButton.classList.add('_1uwz');
-
-    const table = document.querySelector('table._3-s_.uiGrid._51mz > tbody');
-    table.style.display = 'none';
+    yahooButton.classList.add('_1uwz'); // Add grey background on Yahoo button.
     this.showYahooEmojiTable();
   }
 
   onOtherCategoryClicked(otherButton, yahooButton) {
-    const table = document.querySelector('table._3-s_.uiGrid._51mz > tbody');
-    table.style.display = null;
-    yahooButton.classList.remove('_1uwz');
+    this.hideYahooEmojiTable();
+    yahooButton.classList.remove('_1uwz'); // Remove grey background on Yahoo button.
+    otherButton.classList.add('_1uwz'); // Add grey background on the other button.
   }
 
   showYahooEmojiTable() {
-    // Code here.
+    document.querySelector('table._3-s_.uiGrid._51mz > tbody:not(#yahooTable)').style.display = 'none'; // Hide normal table.
+    let table = document.querySelector('#yahooTable');
+    if (!table) {
+      // Create Yahoo table if not exist.
+      table = document.createElement('tbody');
+      table.id = 'yahooTable';
+      document.querySelector('table._3-s_.uiGrid._51mz').appendChild(table);
+
+      // Populate emoji table.
+      let currentRow = null;
+      for (let i = 0; i < emoticons.length; i++) {
+        if (i % 6 === 0) {
+          // Create new row.
+          currentRow = document.createElement('tr');
+          currentRow.classList.add('_51mx');
+          table.appendChild(currentRow);
+        }
+
+        // Add emoticon to the current row.
+        const emoticonHtml = '<td class="_3-sy _51m-"><div class=" _4rlu"><div aria-label="Pick an Emoji" role="button" tabindex="1" class=""><img class="_1lih _1ift _1ifu img" style="width: 32px; height: auto" src="' + chrome.extension.getURL(emoticons[i].src) + '" alt="" style="margin: 0px;"></div></div></td>';
+        currentRow.insertAdjacentHTML('beforeend', emoticonHtml);
+      }
+    } else {
+      table.style.display = null; // Show Yahoo table.
+    }
+  }
+
+  hideYahooEmojiTable() {
+    document.querySelector('table._3-s_.uiGrid._51mz > tbody:not(#yahooTable)').style.display = null; // Show normal table.
+
+    // Hide Yahoo table.
+    const yahooTable = document.querySelector('#yahooTable');
+    if (yahooTable) {
+      yahooTable.style.display = 'none';
+    }
   }
 
   checkEnabledStatus() {
