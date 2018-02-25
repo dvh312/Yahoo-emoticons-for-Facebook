@@ -4,6 +4,7 @@ class Service {
       if (isEnabled) {
         this.lastOpenedPopup = null;
         this.popupCloseTimeout = null;
+        this.clipboardPatterns = [];
         this.filterElements(document);
         this.addMutationObserver(this.mutationsHandler.bind(this));
         this.addStyleToHead(popupStyle);
@@ -227,6 +228,7 @@ class Service {
 
   showYahooEmojiTable() {
     document.querySelector('table._3-s_.uiGrid._51mz > tbody:not(#yahooTable)').style.display = 'none'; // Hide normal table.
+    this.clipboardPatterns = []; // Reset patterns in clipboard.
     let table = document.querySelector('#yahooTable');
     if (!table) {
       // Create Yahoo table if not exist.
@@ -259,11 +261,11 @@ class Service {
     // Closed last popup if less than 1s.
     if (this.lastOpenedPopup && this.lastOpenedPopup.classList.contains('show')) {
       this.lastOpenedPopup.classList.remove('show');
-      this.lastOpenedPopup = null;
     }
 
     // Show popup and close after 1s
-    this.copyTextToClipboard(emoticons[emojiIndex].patterns[0]);
+    this.clipboardPatterns.push(emoticons[emojiIndex].patterns[0]);
+    this.copyTextToClipboard(this.clipboardPatterns.join(' '));
     const popup = emojiElement.querySelector('span.popuptext');
     popup.classList.add('show');
     this.lastOpenedPopup = popup;
